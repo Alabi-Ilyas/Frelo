@@ -47,7 +47,7 @@ export default function SignIn({ navigation }) {
         <Text style={styles.text2}> Forgot Password?</Text>
       </TouchableOpacity>
       <View style={styles.button}>
-        <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
+        <TouchableOpacity onPress={() => navigation.navigate("Dashboard")}>
           <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
       </View>

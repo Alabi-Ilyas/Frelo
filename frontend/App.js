@@ -6,6 +6,7 @@ import SignUp from "./components/SignUpScreen";
 import SignIn from "./components/SignInScreen";
 import ForgotPassword from "./components/ForgotPasswordScreen";
 import ChangePassword from "./components/ChangePassword";
+import Dashboard from "./components/DashboardScreen";
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -37,6 +38,11 @@ export default function App() {
         <Stack.Screen
           name="ChangePassword"
           component={ChangePassword}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Dashboard"
+          component={Dashboard}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
