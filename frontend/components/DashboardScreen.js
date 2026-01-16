@@ -65,8 +65,62 @@ export default function Dashboard({ navigation }) {
         <Text style={styles.text5}>My Tasks</Text>
         <Text style={styles.text5}>All Tasks</Text>
       </View>
-      <View style={styles.card4}></View>
-      <View style={styles.card4}></View>
+      <View style={styles.card4}>
+        <Image
+          source={require("./../assets/images/check.png")}
+          style={styles.image3}
+          resizeMode="contain"
+        />
+        <View style={{ marginLeft: 15 }}>
+          <Text style={styles.text6}>Submit Project proposal</Text>
+          <Text style={styles.text7}>Today 10:00 AM</Text>
+        </View>
+      </View>
+      <View style={styles.card4}>
+        <Image
+          source={require("./../assets/images/check2.png")}
+          style={styles.image3}
+          resizeMode="contain"
+        />
+        <View style={{ marginLeft: 15 }}>
+          <Text style={styles.text6}>Submit Project proposal</Text>
+          <Text style={styles.text7}>23 Apr 10:00 AM</Text>
+        </View>
+      </View>
+      <Text style={styles.text8}>Project</Text>
+      <View>
+        <View style={styles.card5}>
+          <Ionicons
+            style={styles.icon2}
+            name="wallet-outline"
+            size={32}
+            color="black"
+          />
+          <View style={{ marginLeft: 15 }}>
+            <Text style={styles.text9}>E-Commerce App</Text>
+            <Text style={styles.text10}>Client:XYZ Inc</Text>
+          </View>
+          <View style={{ marginLeft: 25 }}>
+            <Text style={styles.text11}>Progress: 75%</Text>
+          </View>
+        </View>
+        <View style={styles.card6}>
+          <Ionicons
+            style={styles.icon2}
+            name="briefcase-outline"
+            size={32}
+            color="black"
+          />
+          <View style={{ marginLeft: 15 }}>
+            <Text style={styles.text9}>Protfolio Website</Text>
+            <Text style={styles.text10}>Client:Jon Doe</Text>
+          </View>
+          <View style={{ marginLeft: 25 }}>
+            <Text style={styles.text11}>Progress: 75%</Text>
+            
+          </View>
+        </View>
+      </View>
     </View>
   );
 }
@@ -183,6 +237,62 @@ const styles = StyleSheet.create({
     marginTop: 20,
     borderWidth: 0.7,
     borderColor: "#000000",
-    justifyContent: "center",
-    alignItems,
-  },});
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  image3: {
+    width: 30,
+    height: 30,
+    marginLeft: 15,
+  },
+  text6: {
+    fontFamily: "Outfit-SemiBold",
+    fontSize: 18,
+  },
+  text7: {
+    fontFamily: "Outfit-Regular",
+    fontSize: 15,
+  },
+  text8: {
+    fontFamily: "Outfit-SemiBold",
+    fontSize: 24,
+    color: "#0A2166",
+    marginTop: 30,
+  },
+  card5: {
+    height: 59,
+    width: 363,
+    borderRadius: 10,
+    marginTop: 20,
+    borderWidth: 0.7,
+    borderColor: "#000000",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  card6: {
+    height: 59,
+    width: 363,
+    borderRadius: 10,
+    marginTop: 20,
+    borderWidth: 0.7,
+    borderColor: "#000000",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  icon2: {
+    marginTop: 5,
+    marginLeft: 10,
+  },
+  text9: {
+    fontFamily: "Outfit-SemiBold",
+    fontSize: 18,
+  },
+  text10: {
+    fontFamily: "Outfit-Regular",
+    fontSize: 14,
+  },
+  text11:{
+     fontFamily: "Outfit-SemiBold",
+    fontSize: 16,
+  }
+});

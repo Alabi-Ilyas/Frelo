@@ -7,6 +7,7 @@ import SignIn from "./components/SignInScreen";
 import ForgotPassword from "./components/ForgotPasswordScreen";
 import ChangePassword from "./components/ChangePassword";
 import Dashboard from "./components/DashboardScreen";
+import BottomTabs from "./components/BottomTab";
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -42,7 +43,17 @@ export default function App() {
         />
         <Stack.Screen
           name="Dashboard"
-          component={Dashboard}
+          component={BottomTabs}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Tasks"
+          component={BottomTabs}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name="Project"
+          component={BottomTabs}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

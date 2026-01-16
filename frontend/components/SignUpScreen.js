@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,9 +7,13 @@ import {
   Image,
   TouchableOpacity,
   TextInput,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
+import { UserAPI } from "../api/axios"; // 👈 import API helper
+
 export default function SignUp({ navigation }) {
   const [fontsLoaded] = useFonts({
     "Outfit-Regular": require("../assets/fonts/Outfit-Regular.ttf"),
@@ -17,9 +21,35 @@ export default function SignUp({ navigation }) {
   });
 
   const [checked, setChecked] = useState(false);
-  if (!fontsLoaded) {
-    return null; // Or a loading screen
-  }
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  if (!fontsLoaded) return null;
+
+  const handleSignUp = async () => {
+    if (!checked)
+      return Alert.alert("Terms Required", "Please agree to the terms.");
+    if (!fullName || !email || !password)
+      return Alert.alert("Missing Info", "All fields are required.");
+
+    setLoading(true);
+    try {
+      const res = await UserAPI.register({ fullName, email, password });
+      Alert.alert("Success", "Account created successfully!");
+      navigation.navigate("SignIn");
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      Alert.alert(
+        "Error",
+        err.response?.data?.message || "Something went wrong!"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -34,24 +64,40 @@ export default function SignUp({ navigation }) {
       <Text style={styles.body}>
         Start managing your freelance projects in one place
       </Text>
+
       <View>
-        <Text style={styles.Header}> Full Name</Text>
+        <Text style={styles.Header}>Full Name</Text>
         <View style={styles.input}>
-          <TextInput placeholder="Enter Full Name" />
+          <TextInput
+            placeholder="Enter Full Name"
+            value={fullName}
+            onChangeText={setFullName}
+          />
         </View>
       </View>
       <View>
-        <Text style={styles.Header}> Email</Text>
+        <Text style={styles.Header}>Email</Text>
         <View style={styles.input}>
-          <TextInput placeholder="Enter Email" />
+          <TextInput
+            placeholder="Enter Email"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+          />
         </View>
       </View>
       <View>
-        <Text style={styles.Header}> Password</Text>
+        <Text style={styles.Header}>Password</Text>
         <View style={styles.input}>
-          <TextInput placeholder="Enter Password" />
+          <TextInput
+            placeholder="Enter Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
         </View>
       </View>
+
       <TouchableOpacity
         onPress={() => setChecked(!checked)}
         style={{ flexDirection: "row", alignItems: "center", marginTop: 15 }}
@@ -65,11 +111,17 @@ export default function SignUp({ navigation }) {
           I agree to the <Text style={styles.text2}>Terms & Conditions</Text>
         </Text>
       </TouchableOpacity>
+
       <View style={styles.button}>
-        <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
-          <Text style={styles.buttonText}>Sign Up</Text>
+        <TouchableOpacity onPress={handleSignUp} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Sign Up</Text>
+          )}
         </TouchableOpacity>
       </View>
+
       <View
         style={{
           flexDirection: "row",
@@ -85,6 +137,7 @@ export default function SignUp({ navigation }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
