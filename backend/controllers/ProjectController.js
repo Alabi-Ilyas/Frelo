@@ -2,9 +2,7 @@ const Project = require("../models/Project");
 const Task = require("../models/Task");
 const User = require("../models/User");
 
-/**
- * GET ALL PROJECTS
- */
+
 exports.getProjects = async (req, res) => {
   try {
     const projects = await Project.find({ user: req.userId }).sort({
@@ -35,9 +33,7 @@ exports.getProjects = async (req, res) => {
   }
 };
 
-/**
- * ADD PROJECT
- */
+
 exports.addProject = async (req, res) => {
   try {
     const { title, client, color } = req.body;
@@ -60,9 +56,7 @@ exports.addProject = async (req, res) => {
   }
 };
 
-/**
- * UPDATE PROJECT
- */
+
 exports.updateProject = async (req, res) => {
   try {
     const project = await Project.findOneAndUpdate(
@@ -82,9 +76,6 @@ exports.updateProject = async (req, res) => {
   }
 };
 
-/**
- * DASHBOARD
- */
 exports.getDashboard = async (req, res) => {
   try {
     const user = await User.findById(req.userId);

@@ -1,12 +1,9 @@
 const Task = require("../models/Task");
 
-/**
- * GET /tasks
- * Protected
- */
+
 exports.getTasks = async (req, res) => {
   try {
-    // ✅ userId comes from auth middleware
+    
     const userId = req.userId;
 
     const tasks = await Task.find({ user: userId }).sort({ createdAt: -1 });
@@ -17,10 +14,6 @@ exports.getTasks = async (req, res) => {
   }
 };
 
-/**
- * POST /tasks
- * Protected
- */
 exports.addTask = async (req, res) => {
   try {
     const { name, dueDate, projectId } = req.body;
@@ -43,10 +36,6 @@ exports.addTask = async (req, res) => {
   }
 };
 
-/**
- * PUT /tasks/:id
- * Protected
- */
 exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params;
