@@ -1,6 +1,8 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { View, StyleSheet, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context"; // 👈 Crucial import
 import Dashboard from "./DashboardScreen";
 import TaskScreen from "./TaskScreen";
 import ProjectScreen from "./ProjectScreen";
@@ -8,29 +10,49 @@ import ProjectScreen from "./ProjectScreen";
 const Tab = createBottomTabNavigator();
 
 export default function BottomTabs() {
+  const insets = useSafeAreaInsets(); // 👈 Hook to get device-specific gaps
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color }) => {
           let iconName;
+          if (route.name === "Home") iconName = focused ? "home" : "home-outline";
+          else if (route.name === "Tasks") iconName = focused ? "grid" : "grid-outline";
+          else if (route.name === "Projects") iconName = focused ? "folder-open" : "folder-outline";
 
-          if (route.name === "Home") {
-            iconName = focused ? "home" : "home-outline";
-          } else if (route.name === "Tasks") {
-            iconName = focused ? "list" : "list-outline";
-          } else if (route.name === "Projects") {
-            iconName = focused ? "folder" : "folder-outline";
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return (
+            <View style={styles.iconContainer}>
+              <Ionicons name={iconName} size={24} color={color} />
+              {focused && <View style={styles.activeDot} />}
+            </View>
+          );
         },
-        tabBarActiveTintColor: "#0C1A4B",
-        tabBarInactiveTintColor: "gray",
+        tabBarActiveTintColor: "#0A2166",
+        tabBarInactiveTintColor: "#9DA1AB",
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontFamily: "Outfit-SemiBold",
+          fontSize: 11,
+          marginBottom: 10,
+        },
         tabBarStyle: {
-          backgroundColor: "#fff",
-          height: 90,
+          position: "absolute",
+          // Calculation: We add the safe gap to our desired 20px margin
+          bottom: Platform.OS === "ios" ? insets.bottom : 15, 
+          left: 20,
+          right: 20,
+          backgroundColor: "#ffffff",
+          borderRadius: 25,
+          height: 70,
+          elevation: 5,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
           borderTopWidth: 0,
-          paddingBottom: 10,
+          // Extra padding for the bottom of the bar itself
+          paddingBottom: 0, 
         },
         headerShown: false,
       })}
@@ -41,3 +63,19 @@ export default function BottomTabs() {
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    // Adjust icon vertical position
+    marginTop: 10,
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#FF6600",
+    marginTop: 4,
+  },
+});

@@ -1,12 +1,16 @@
+// routes/taskRoutes.js
 const express = require("express");
 const router = express.Router();
 const taskController = require("../controllers/taskController");
+const authMiddleware = require("../middleware/authMiddleware"); // checks JWT
 
-router.post("/", taskController.createTask);
-router.get("/", taskController.getTasks);
-router.get("/:id", taskController.getTaskById);
-router.patch("/:id", taskController.updateTask);
-router.delete("/:id", taskController.deleteTask);
-router.get("/project/:projectId", taskController.getTasksByProject);
+// Get all tasks for a user
+router.get("/", authMiddleware, taskController.getTasks);
+
+// Add a new task
+router.post("/", authMiddleware, taskController.addTask);
+
+// Update a task
+router.put("/:id", authMiddleware, taskController.updateTask);
 
 module.exports = router;

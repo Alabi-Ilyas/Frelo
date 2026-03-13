@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -7,80 +7,86 @@ import {
   ScrollView,
   Modal,
   TextInput,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import * as Progress from "react-native-progress";
+import {
+  addProject,
+  getProjects,
+  updateProject,
+  deleteProject,
+} from "../api/axios"; // 👈 Backend API
 
 export default function ProjectScreen() {
   const [selectedTab, setSelectedTab] = useState("Active");
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      title: "E-Commerce App",
-      client: "XYZ Inc",
-      tasks: [
-        { name: "Design UI", done: true },
-        { name: "Build Backend", done: false },
-        { name: "Connect APIs", done: false },
-      ],
-      color: "#FF6600",
-    },
-    {
-      id: 2,
-      title: "Portfolio Website",
-      client: "John Doe",
-      tasks: [
-        { name: "Setup hosting", done: true },
-        { name: "Build homepage", done: true },
-        { name: "Add animations", done: false },
-      ],
-      color: "#0A66FF",
-    },
-  ]);
-
+  const [projects, setProjects] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newProject, setNewProject] = useState({
     title: "",
     client: "",
     color: "#0A2166",
   });
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
 
   const [fontsLoaded] = useFonts({
     "Outfit-Regular": require("../assets/fonts/Outfit-Regular.ttf"),
     "Outfit-SemiBold": require("../assets/fonts/Outfit-SemiBold.ttf"),
   });
-
   if (!fontsLoaded) return null;
 
-  // ✅ Calculate progress automatically based on tasks
-  const getProjectProgress = (tasks) => {
-    if (!tasks.length) return 0;
-    const completed = tasks.filter((t) => t.done).length;
-    return completed / tasks.length;
+  // ===== Fetch projects from backend =====
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      const data = await getProjects(); // already returns array
+      setProjects(data);
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      Alert.alert("Error", "Failed to fetch projects");
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  // ===== Calculate project progress =====
+  const getProjectProgress = (project) => {
+    return project.progress ? project.progress / 100 : 0;
   };
 
-  // ✅ Add a new project
-  const handleAddProject = () => {
+  // ===== Add a new project =====
+  const handleAddProject = async () => {
     if (!newProject.title.trim()) return;
-    const newItem = {
-      id: Date.now(),
-      title: newProject.title,
-      client: newProject.client || "Unknown Client",
-      tasks: [],
-      color: newProject.color,
-    };
-    setProjects([...projects, newItem]);
-    setNewProject({ title: "", client: "", color: "#0A2166" });
-    setModalVisible(false);
+
+    setAdding(true);
+    try {
+      const projectData = {
+        title: newProject.title,
+        client: newProject.client,
+      };
+
+      const createdProject = await addProject(projectData);
+
+      setProjects((prev) => [createdProject, ...prev]);
+      setNewProject({ title: "", client: "", color: "#0A2166" });
+      setModalVisible(false);
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      Alert.alert("Error", "Failed to add project");
+    } finally {
+      setAdding(false);
+    }
   };
 
-  const activeProjects = projects.filter((p) =>
-    getProjectProgress(p.tasks) < 1
-  );
-  const completedProjects = projects.filter(
-    (p) => getProjectProgress(p.tasks) === 1
-  );
+  const activeProjects = projects.filter((p) => (p.progress ?? 0) < 100);
+
+  const completedProjects = projects.filter((p) => (p.progress ?? 0) === 100);
 
   const visibleProjects =
     selectedTab === "Active" ? activeProjects : completedProjects;
@@ -120,30 +126,39 @@ export default function ProjectScreen() {
       </View>
 
       {/* Projects List */}
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {visibleProjects.map((project) => {
-          const progress = getProjectProgress(project.tasks);
-          return (
-            <View key={project.id} style={styles.projectCard}>
-              <Text style={styles.projectTitle}>{project.title}</Text>
-              <Text style={styles.clientText}>Client: {project.client}</Text>
-              <Progress.Bar
-                progress={progress}
-                width={null}
-                height={7}
-                color={project.color}
-                unfilledColor="#E5E5E5"
-                borderWidth={0}
-                borderRadius={10}
-                style={{ marginVertical: 8 }}
-              />
-              <Text style={styles.progressText}>
-                Progress {Math.round(progress * 100)}%
-              </Text>
-            </View>
-          );
-        })}
-      </ScrollView>
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#0A2166"
+          style={{ marginTop: 50 }}
+        />
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {visibleProjects.map((project) => {
+            const progress = getProjectProgress(project);
+
+            return (
+              <View key={project._id} style={styles.projectCard}>
+                <Text style={styles.projectTitle}>{project.title}</Text>
+                <Text style={styles.clientText}>Client: {project.client}</Text>
+                <Progress.Bar
+                  progress={progress}
+                  width={null}
+                  height={7}
+                  color={project.color || "#0A2166"}
+                  unfilledColor="#E5E5E5"
+                  borderWidth={0}
+                  borderRadius={10}
+                  style={{ marginVertical: 8 }}
+                />
+                <Text style={styles.progressText}>
+                  Progress {Math.round(progress * 100)}%
+                </Text>
+              </View>
+            );
+          })}
+        </ScrollView>
+      )}
 
       {/* Add Project Modal */}
       <Modal
@@ -176,8 +191,13 @@ export default function ProjectScreen() {
             <TouchableOpacity
               style={styles.modalBtn}
               onPress={handleAddProject}
+              disabled={adding}
             >
-              <Text style={styles.modalBtnText}>Add Project</Text>
+              {adding ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.modalBtnText}>Add Project</Text>
+              )}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setModalVisible(false)}>
               <Text style={styles.cancelText}>Cancel</Text>

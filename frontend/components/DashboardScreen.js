@@ -1,298 +1,312 @@
 import { StatusBar } from "expo-status-bar";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
   View,
   Image,
+  ActivityIndicator,
+  ScrollView,
   TouchableOpacity,
-  TextInput,
 } from "react-native";
-import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
-export default function Dashboard({ navigation }) {
-  const [fontsLoaded] = useFonts({
-    "Outfit-Regular": require("../assets/fonts/Outfit-Regular.ttf"),
-    "Outfit-SemiBold": require("../assets/fonts/Outfit-SemiBold.ttf"),
-  });
+import { getProjects, getTasks } from "../api/axios";
+import { loadToken } from "../utils/loadToken";
+import { setAuthToken } from "../api/axios";
 
-  const [checked, setChecked] = useState(false);
-  if (!fontsLoaded) {
-    return null; // Or a loading screen
+export default function Dashboard({ navigation }) {
+  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState([]);
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        setLoading(true);
+        const token = await loadToken();
+        if (!token) {
+          navigation.replace("SignIn");
+          return;
+        }
+        setAuthToken(token);
+
+        const [taskRes, projectRes] = await Promise.all([
+          getTasks(),
+          getProjects(),
+        ]);
+
+        const allTasks =
+          taskRes.tasks || (Array.isArray(taskRes) ? taskRes : []);
+        const allProjects =
+          projectRes.projects || (Array.isArray(projectRes) ? projectRes : []);
+
+        const filteredTasks = allTasks.filter((t) => {
+          const s = t.status?.toLowerCase().trim();
+          return (
+            s === "ongoing" ||
+            s === "completed" ||
+            s === "done" ||
+            s === "in progress"
+          );
+        });
+
+        setTasks(filteredTasks.length > 0 ? filteredTasks : allTasks);
+        setProjects(allProjects);
+      } catch (err) {
+        console.error("Dashboard Error:", err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="#0A2166" />
+      </View>
+    );
   }
+
   return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
-      <View style={styles.view1}>
-        <View style={styles.logo}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <StatusBar style="dark" />
+
+      {/* --- REFINED HEADER --- */}
+      <View style={styles.header}>
+        <View style={styles.logoWrapper}>
           <Image
-            source={require("./../assets/images/logo2.png")}
-            style={styles.image}
+            source={require("../assets/images/logo2.png")}
+            style={styles.logoMain}
             resizeMode="contain"
           />
         </View>
-        <View style={styles.logo2}>
-          <Image
-            source={require("./../assets/images/Profile.png")}
-            style={styles.image2}
-            resizeMode="contain"
+        <View style={styles.headerRight}>
+          {/* REPLACED IMAGE WITH ICON */}
+          <TouchableOpacity
+            style={styles.profileIconBtn}
+            onPress={() => navigation.navigate("Profile")}
+          >
+            <Ionicons name="person-circle" size={45} color="#0A2166" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingsIcon}>
+            <Ionicons name="settings-outline" size={28} color="#0A2166" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.welcomeBox}>
+        <Text style={styles.welcomeTitle}>👋 Welcome back, Ilyas</Text>
+        <Text style={styles.welcomeSub}>Manage your tasks effectively</Text>
+      </View>
+
+      {/* --- SUMMARY CARDS --- */}
+      <View style={styles.statsRow}>
+        <View style={[styles.statCard, { backgroundColor: "#FF6600" }]}>
+          <Text style={styles.statNum}>
+            {
+              tasks.filter((t) => t.status?.toLowerCase() !== "completed")
+                .length
+            }
+          </Text>
+          <Text style={styles.statLabel}>Ongoing</Text>
+        </View>
+
+        <View style={[styles.statCard, { backgroundColor: "#18C18F" }]}>
+          <Text style={styles.statNum}>
+            {
+              tasks.filter((t) => t.status?.toLowerCase() === "completed")
+                .length
+            }
+          </Text>
+          <Text style={styles.statLabel}>Completed</Text>
+        </View>
+      </View>
+
+      {/* --- TASKS --- */}
+      <Text style={styles.sectionTitle}>My Tasks</Text>
+      {tasks.map((task) => (
+        <View
+          key={task._id || Math.random().toString()}
+          style={styles.taskItem}
+        >
+          <View
+            style={[
+              styles.indicator,
+              {
+                backgroundColor:
+                  task.status?.toLowerCase() === "completed"
+                    ? "#18C18F"
+                    : "#FF6600",
+              },
+            ]}
           />
+          <View style={styles.taskData}>
+            <Text style={styles.taskTitle}>
+              {task.title || task.name || "Task Item"}
+            </Text>
+            <Text style={styles.taskDate}>
+              {task.dueDate || task.date
+                ? new Date(task.dueDate || task.date).toLocaleDateString()
+                : "No Date Set"}
+            </Text>
+          </View>
           <Ionicons
-            style={styles.icon}
-            name="settings-outline"
-            size={32}
-            color="black"
+            name={
+              task.status?.toLowerCase() === "completed"
+                ? "checkmark-circle"
+                : "ellipsis-horizontal-circle"
+            }
+            size={28}
+            color={
+              task.status?.toLowerCase() === "completed" ? "#18C18F" : "#FF6600"
+            }
           />
         </View>
-      </View>
-      <Text style={styles.text1}>👋 Welcome back,Ilyas</Text>
-      <Text style={styles.text2}>Here’s what’s on your plate today</Text>
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <View style={styles.card1}>
-          <Text style={styles.text3}>2</Text>
-          <Text style={styles.text4}>Ongoing</Text>
-        </View>
-        <View style={styles.card2}>
-          <Text style={styles.text3}>14</Text>
-          <Text style={styles.text4}>Upcoming</Text>
-        </View>
-        <View style={styles.card3}>
-          <Text style={styles.text3}>6</Text>
-          <Text style={styles.text4}>Completed</Text>
-        </View>
-      </View>
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <Text style={styles.text5}>My Tasks</Text>
-        <Text style={styles.text5}>All Tasks</Text>
-      </View>
-      <View style={styles.card4}>
-        <Image
-          source={require("./../assets/images/check.png")}
-          style={styles.image3}
-          resizeMode="contain"
-        />
-        <View style={{ marginLeft: 15 }}>
-          <Text style={styles.text6}>Submit Project proposal</Text>
-          <Text style={styles.text7}>Today 10:00 AM</Text>
-        </View>
-      </View>
-      <View style={styles.card4}>
-        <Image
-          source={require("./../assets/images/check2.png")}
-          style={styles.image3}
-          resizeMode="contain"
-        />
-        <View style={{ marginLeft: 15 }}>
-          <Text style={styles.text6}>Submit Project proposal</Text>
-          <Text style={styles.text7}>23 Apr 10:00 AM</Text>
-        </View>
-      </View>
-      <Text style={styles.text8}>Project</Text>
-      <View>
-        <View style={styles.card5}>
-          <Ionicons
-            style={styles.icon2}
-            name="wallet-outline"
-            size={32}
-            color="black"
-          />
-          <View style={{ marginLeft: 15 }}>
-            <Text style={styles.text9}>E-Commerce App</Text>
-            <Text style={styles.text10}>Client:XYZ Inc</Text>
+      ))}
+
+      {/* --- PROJECTS --- */}
+      <Text style={[styles.sectionTitle, { marginTop: 30 }]}>
+        Active Projects
+      </Text>
+      {projects.map((project) => (
+        <View
+          key={project._id || Math.random().toString()}
+          style={styles.projectItem}
+        >
+          <View style={styles.projectTopRow}>
+            <View style={styles.pIconBg}>
+              <Ionicons name="folder" size={24} color="#0A2166" />
+            </View>
+            <View style={{ flex: 1, marginLeft: 15 }}>
+              <Text style={styles.pTitle}>{project.title || "Project"}</Text>
+              <Text style={styles.pClient}>
+                {project.client || "No Client"}
+              </Text>
+            </View>
+            <Text style={styles.pPercent}>{project.progress || 0}%</Text>
           </View>
-          <View style={{ marginLeft: 25 }}>
-            <Text style={styles.text11}>Progress: 75%</Text>
+          <View style={styles.progressBg}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${project.progress || 0}%` },
+              ]}
+            />
           </View>
         </View>
-        <View style={styles.card6}>
-          <Ionicons
-            style={styles.icon2}
-            name="briefcase-outline"
-            size={32}
-            color="black"
-          />
-          <View style={{ marginLeft: 15 }}>
-            <Text style={styles.text9}>Protfolio Website</Text>
-            <Text style={styles.text10}>Client:Jon Doe</Text>
-          </View>
-          <View style={{ marginLeft: 25 }}>
-            <Text style={styles.text11}>Progress: 75%</Text>
-            
-          </View>
-        </View>
-      </View>
-    </View>
+      ))}
+
+      <View style={{ height: 60 }} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+  container: { flex: 1, backgroundColor: "#FFF", paddingHorizontal: 20 },
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 60,
+    marginBottom: 20,
   },
-  logo: {
-    alignItems: "left",
-    alignSelf: "flex-start",
+  logoWrapper: {
+    width: 120,
+    height: 40,
+    justifyContent: "center",
   },
-  logo2: {
-    alignSelf: "flex-start",
-    marginLeft: 120,
-    marginTop: -18,
+  logoMain: {
+    width: 100,
+    height: 100,
+  },
+  headerRight: {
     flexDirection: "row",
     alignItems: "center",
   },
+  profileIconBtn: {
+    marginRight: 10,
+  },
+  settingsIcon: {
+    padding: 5,
+  },
 
-  image: {
-    width: 120,
-    height: 120,
-  },
-  image2: {
-    width: 120,
-    height: 120,
-  },
-  view1: {
+  welcomeBox: { marginBottom: 30 },
+  welcomeTitle: { fontSize: 26, fontWeight: "bold", color: "#0A2166" },
+  welcomeSub: { fontSize: 16, color: "#666", marginTop: 4 },
+
+  statsRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  statCard: {
+    width: "47%",
+    height: 100,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  statNum: { fontSize: 30, color: "#FFF", fontWeight: "bold" },
+  statLabel: { fontSize: 15, color: "#FFF", fontWeight: "600" },
 
-    alignItems: "center",
-  },
-  icon: {
-    marginTop: 10,
-    marginLeft: -20,
-  },
-  text1: {
-    fontFamily: "Outfit-SemiBold",
-    fontSize: 30,
-    color: "#0A2166",
-  },
-  text2: {
-    fontFamily: "Outfit-Regular",
-    fontSize: 20,
-    color: "#000000",
-    marginTop: 5,
-  },
-  card1: {
-    backgroundColor: "#FF6600",
-    height: 78,
-    width: 104,
-    borderRadius: 20,
-    marginTop: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    overflow: "hidden",
-  },
-  card2: {
-    backgroundColor: "#0A2166",
-    height: 78,
-    width: 104,
-    borderRadius: 20,
-    marginTop: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    overflow: "hidden",
-  },
-  card3: {
-    backgroundColor: "#18C18F",
-    height: 78,
-    width: 104,
-    borderRadius: 20,
-    marginTop: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    overflow: "hidden",
-  },
-  text3: {
-    fontFamily: "Outfit-Regular",
-    fontSize: 24,
-    color: "#FFFFFF",
-  },
-  text4: {
-    fontFamily: "Outfit-SemiBold",
-    fontSize: 16,
-    color: "#FFFFFF",
-  },
-  text5: {
-    fontFamily: "Outfit-SemiBold",
+  sectionTitle: {
     fontSize: 22,
+    fontWeight: "bold",
     color: "#0A2166",
-    marginTop: 20,
+    marginBottom: 15,
+    marginTop: 25,
   },
-  card4: {
-    height: 59,
-    width: 363,
-    borderRadius: 10,
-    marginTop: 20,
-    borderWidth: 0.7,
-    borderColor: "#000000",
+  taskItem: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#FFF",
+    padding: 18,
+    borderRadius: 20,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
+    elevation: 2,
   },
-  image3: {
-    width: 30,
-    height: 30,
-    marginLeft: 15,
+  indicator: { width: 4, height: 30, borderRadius: 2, marginRight: 15 },
+  taskData: { flex: 1 },
+  taskTitle: { fontSize: 17, fontWeight: "700", color: "#333" },
+  taskDate: { fontSize: 13, color: "#999", marginTop: 4 },
+
+  projectItem: {
+    backgroundColor: "#FFF",
+    padding: 20,
+    borderRadius: 24,
+    marginBottom: 15,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#EEE",
   },
-  text6: {
-    fontFamily: "Outfit-SemiBold",
-    fontSize: 18,
-  },
-  text7: {
-    fontFamily: "Outfit-Regular",
-    fontSize: 15,
-  },
-  text8: {
-    fontFamily: "Outfit-SemiBold",
-    fontSize: 24,
-    color: "#0A2166",
-    marginTop: 30,
-  },
-  card5: {
-    height: 59,
-    width: 363,
-    borderRadius: 10,
-    marginTop: 20,
-    borderWidth: 0.7,
-    borderColor: "#000000",
+  projectTopRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 15,
   },
-  card6: {
-    height: 59,
-    width: 363,
-    borderRadius: 10,
-    marginTop: 20,
-    borderWidth: 0.7,
-    borderColor: "#000000",
-    flexDirection: "row",
+  pIconBg: {
+    width: 45,
+    height: 45,
+    backgroundColor: "#EBF0FF",
+    borderRadius: 12,
+    justifyContent: "center",
     alignItems: "center",
   },
-  icon2: {
-    marginTop: 5,
-    marginLeft: 10,
-  },
-  text9: {
-    fontFamily: "Outfit-SemiBold",
-    fontSize: 18,
-  },
-  text10: {
-    fontFamily: "Outfit-Regular",
-    fontSize: 14,
-  },
-  text11:{
-     fontFamily: "Outfit-SemiBold",
-    fontSize: 16,
-  }
+  pTitle: { fontSize: 17, fontWeight: "700", color: "#0A2166" },
+  pClient: { fontSize: 13, color: "#777" },
+  pPercent: { fontWeight: "bold", color: "#0A2166", fontSize: 15 },
+  progressBg: { height: 8, backgroundColor: "#F0F0F0", borderRadius: 4 },
+  progressFill: { height: 8, backgroundColor: "#0A2166", borderRadius: 4 },
 });

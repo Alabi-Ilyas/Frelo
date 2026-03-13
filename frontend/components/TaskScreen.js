@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -10,43 +10,22 @@ import {
   TextInput,
   Platform,
   Keyboard,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { getTasks, addTask, updateTask, deleteTask } from "../api/axios"; // ✅ correct imports
 
 export default function TaskScreen() {
   const [selectedTab, setSelectedTab] = useState("All");
   const [showModal, setShowModal] = useState(false);
   const [newTask, setNewTask] = useState({ title: "", date: new Date() });
   const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      title: "Submit Project Proposal",
-      time: "Today 10:00 AM",
-      status: "Ongoing",
-      color: "#FF6600",
-      completed: false,
-    },
-    {
-      id: 2,
-      title: "Design Homepage",
-      time: "Tomorrow 4:00 PM",
-      status: "Upcoming",
-      color: "#0A66FF",
-      completed: false,
-    },
-    {
-      id: 3,
-      title: "Send Invoice",
-      time: "Wed 9 May",
-      status: "Upcoming",
-      color: "#0A66FF",
-      completed: false,
-    },
-  ]);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
 
   const [fontsLoaded] = useFonts({
     "Outfit-Regular": require("../assets/fonts/Outfit-Regular.ttf"),
@@ -54,56 +33,83 @@ export default function TaskScreen() {
   });
   if (!fontsLoaded) return null;
 
-  const handleToggleComplete = (id) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id
-          ? {
-              ...task,
-              completed: !task.completed,
-              status: !task.completed ? "Completed" : "Ongoing",
-              color: !task.completed ? "#2ECC71" : "#FF6600",
-            }
-          : task
-      )
-    );
-  };
-
-  const handleAddTask = () => {
-    if (newTask.title.trim() === "") return;
-
-    const formattedDate = newTask.date.toLocaleString("en-US", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-    const newEntry = {
-      id: tasks.length + 1,
-      title: newTask.title,
-      time: formattedDate,
-      status: "Upcoming",
-      color: "#0A66FF",
-      completed: false,
-    };
-    setTasks((prev) => [...prev, newEntry]);
-    setNewTask({ title: "", date: new Date() });
-    if (Keyboard && typeof Keyboard.dismiss === "function") {
-      Keyboard.dismiss();
+  /* ======================
+     FETCH TASKS
+  ====================== */
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const data = await getTasks(); // ✅ returns array
+      setTasks(data);
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      Alert.alert("Error", "Failed to fetch tasks");
+    } finally {
+      setLoading(false);
     }
-    setShowModal(false);
   };
 
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  /* ======================
+     TOGGLE COMPLETE
+  ====================== */
+  const handleToggleComplete = async (task) => {
+    try {
+      const updated = await updateTask(task._id, {
+        done: !task.done,
+      });
+
+      setTasks((prev) => prev.map((t) => (t._id === task._id ? updated : t)));
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      Alert.alert("Error", "Failed to update task");
+    }
+  };
+
+  /* ======================
+     ADD TASK
+  ====================== */
+  const handleAddTask = async () => {
+    if (!newTask.title.trim()) return;
+
+    try {
+      setAdding(true);
+
+      const taskData = {
+        name: newTask.title, // ✅ backend expects "name"
+        dueDate: newTask.date,
+      };
+
+      const createdTask = await addTask(taskData); // ✅ API call
+
+      setTasks((prev) => [createdTask, ...prev]); // ✅ prepend new task
+      setNewTask({ title: "", date: new Date() });
+      setShowModal(false);
+      Keyboard.dismiss();
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      Alert.alert("Error", "Failed to add task");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  /* ======================
+     FILTER TABS
+  ====================== */
   const filteredTasks =
     selectedTab === "All"
       ? tasks
-      : tasks.filter((t) =>
-          selectedTab === "Completed"
-            ? t.status === "Completed"
-            : t.status === selectedTab
-        );
+      : selectedTab === "Completed"
+      ? tasks.filter((t) => t.done)
+      : tasks.filter((t) => !t.done);
 
+  /* ======================
+     UI
+  ====================== */
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -118,13 +124,12 @@ export default function TaskScreen() {
         <Image
           source={require("../assets/images/Profile.png")}
           style={styles.profileImage}
-          resizeMode="contain"
         />
       </View>
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
-        {["All", "Ongoing", "Upcoming", "Completed"].map((tab) => (
+        {["All", "Ongoing", "Completed"].map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[styles.tab, selectedTab === tab && styles.activeTab]}
@@ -143,40 +148,61 @@ export default function TaskScreen() {
       </View>
 
       {/* Task List */}
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {filteredTasks.map((task) => (
-          <View key={task.id} style={styles.taskCard}>
-            <TouchableOpacity
-              style={styles.taskLeft}
-              onPress={() => handleToggleComplete(task.id)}
-            >
-              <Ionicons
-                name={task.completed ? "checkbox-outline" : "square-outline"}
-                size={24}
-                color={task.completed ? "#2ECC71" : "#C4C4C4"}
-                style={{ marginRight: 10 }}
-              />
-              <View>
-                <Text
-                  style={[
-                    styles.taskTitle,
-                    task.completed && {
-                      textDecorationLine: "line-through",
-                      color: "#777",
-                    },
-                  ]}
-                >
-                  {task.title}
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#0A2166"
+          style={{ marginTop: 50 }}
+        />
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {filteredTasks.map((task) => (
+            <View key={task._id} style={styles.taskCard}>
+              <TouchableOpacity
+                style={styles.taskLeft}
+                onPress={() => handleToggleComplete(task)}
+              >
+                <Ionicons
+                  name={task.completed ? "checkbox-outline" : "square-outline"}
+                  size={24}
+                  color={task.completed ? "#2ECC71" : "#C4C4C4"}
+                  style={{ marginRight: 10 }}
+                />
+                <View>
+                  <Text
+                    style={[
+                      styles.taskTitle,
+                      task.done && {
+                        textDecorationLine: "line-through",
+                        color: "#777",
+                      },
+                    ]}
+                  >
+                    {task.name}
+                  </Text>
+
+                  <Text style={styles.taskTime}>
+                    {task.dueDate
+                      ? new Date(task.dueDate).toLocaleString()
+                      : "No due date"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: task.completed ? "#2ECC71" : "#FF6600" },
+                ]}
+              >
+                <Text style={styles.statusText}>
+                  {task.completed ? "Completed" : "Ongoing"}
                 </Text>
-                <Text style={styles.taskTime}>{task.time}</Text>
               </View>
-            </TouchableOpacity>
-            <View style={[styles.statusBadge, { backgroundColor: task.color }]}>
-              <Text style={styles.statusText}>{task.status}</Text>
             </View>
-          </View>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      )}
 
       {/* Floating Add Button */}
       <TouchableOpacity
@@ -215,9 +241,15 @@ export default function TaskScreen() {
               <TouchableOpacity
                 style={[styles.modalBtn, { backgroundColor: "#0A2166" }]}
                 onPress={handleAddTask}
+                disabled={adding}
               >
-                <Text style={styles.modalBtnText}>Add Task</Text>
+                {adding ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.modalBtnText}>Add Task</Text>
+                )}
               </TouchableOpacity>
+
               <TouchableOpacity
                 style={[styles.modalBtn, { backgroundColor: "#ccc" }]}
                 onPress={() => setShowModal(false)}
@@ -229,16 +261,14 @@ export default function TaskScreen() {
         </View>
       </Modal>
 
-      {/* 👇 Move this outside of Modal */}
       {showDatePicker && (
         <DateTimePicker
           value={newTask.date}
           mode="datetime"
           display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(event, selectedDate) => {
+          onChange={(e, date) => {
             setShowDatePicker(false);
-            if (selectedDate)
-              setNewTask((prev) => ({ ...prev, date: selectedDate }));
+            if (date) setNewTask((p) => ({ ...p, date }));
           }}
         />
       )}

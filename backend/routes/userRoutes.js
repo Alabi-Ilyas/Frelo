@@ -1,10 +1,14 @@
+// routes/authRoutes.js
 const express = require("express");
 const router = express.Router();
-const userController = require("../controllers/userController");
+const authController = require("../controllers/userController");
 
-router.post("/", userController.createUser);
-router.get("/", userController.getUsers);
-router.get("/:id", userController.getUserById);
+// Public routes
+router.post("/register", authController.register);
+router.post("/login", authController.login);
+router.post("/forgot-password", authController.forgotPassword);
+
+// Protected route (user must be authenticated)
+router.post("/change-password", authController.changePassword);
 
 module.exports = router;
-

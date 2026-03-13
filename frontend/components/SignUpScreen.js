@@ -9,10 +9,13 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
-import { UserAPI } from "../api/axios"; // 👈 import API helper
+import { registerUser } from "../api/axios";
 
 export default function SignUp({ navigation }) {
   const [fontsLoaded] = useFonts({
@@ -25,6 +28,7 @@ export default function SignUp({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (!fontsLoaded) return null;
 
@@ -36,14 +40,13 @@ export default function SignUp({ navigation }) {
 
     setLoading(true);
     try {
-      const res = await UserAPI.register({ fullName, email, password });
+      await registerUser({ fullName, email, password });
       Alert.alert("Success", "Account created successfully!");
       navigation.navigate("SignIn");
     } catch (err) {
-      console.error(err.response?.data || err.message);
       Alert.alert(
         "Error",
-        err.response?.data?.message || "Something went wrong!"
+        err.response?.data?.message || "Something went wrong!",
       );
     } finally {
       setLoading(false);
@@ -51,178 +54,243 @@ export default function SignUp({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
-      <View style={styles.logo}>
-        <Image
-          source={require("./../assets/images/logo.png")}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      </View>
-      <Text style={styles.heading}>Create Your Frelo Account</Text>
-      <Text style={styles.body}>
-        Start managing your freelance projects in one place
-      </Text>
-
-      <View>
-        <Text style={styles.Header}>Full Name</Text>
-        <View style={styles.input}>
-          <TextInput
-            placeholder="Enter Full Name"
-            value={fullName}
-            onChangeText={setFullName}
-          />
-        </View>
-      </View>
-      <View>
-        <Text style={styles.Header}>Email</Text>
-        <View style={styles.input}>
-          <TextInput
-            placeholder="Enter Email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-          />
-        </View>
-      </View>
-      <View>
-        <Text style={styles.Header}>Password</Text>
-        <View style={styles.input}>
-          <TextInput
-            placeholder="Enter Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-        </View>
-      </View>
-
-      <TouchableOpacity
-        onPress={() => setChecked(!checked)}
-        style={{ flexDirection: "row", alignItems: "center", marginTop: 15 }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.checkbox}>
-          {checked && (
-            <Ionicons name="checkmark-outline" size={18} color="#FF6600" />
-          )}
+        <StatusBar style="dark" />
+
+        <View style={styles.header}>
+          <Image
+            source={require("./../assets/images/logo.png")}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.heading}>Create Account</Text>
+          <Text style={styles.subheading}>Join the Frelo community today</Text>
         </View>
-        <Text style={styles.text}>
-          I agree to the <Text style={styles.text2}>Terms & Conditions</Text>
-        </Text>
-      </TouchableOpacity>
 
-      <View style={styles.button}>
-        <TouchableOpacity onPress={handleSignUp} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Sign Up</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+        <View style={styles.form}>
+          {/* Full Name Input */}
+          <Text style={styles.inputLabel}>Full Name</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="person-outline"
+              size={20}
+              color="#666"
+              style={styles.icon}
+            />
+            <TextInput
+              placeholder="Ilyas Name"
+              style={styles.input}
+              value={fullName}
+              onChangeText={setFullName}
+            />
+          </View>
 
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          marginTop: 20,
-        }}
-      >
-        <Text style={styles.text3}>Already have an account?</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("SignIn")}>
-          <Text style={styles.text4}>Sign In</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          {/* Email Input */}
+          <Text style={styles.inputLabel}>Email Address</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="mail-outline"
+              size={20}
+              color="#666"
+              style={styles.icon}
+            />
+            <TextInput
+              placeholder="email@example.com"
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
+
+          {/* Password Input */}
+          <Text style={styles.inputLabel}>Password</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              color="#666"
+              style={styles.icon}
+            />
+            <TextInput
+              placeholder="••••••••"
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={20}
+                color="#666"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Terms Checkbox */}
+          <TouchableOpacity
+            onPress={() => setChecked(!checked)}
+            style={styles.checkboxContainer}
+          >
+            <View style={[styles.checkbox, checked && styles.checkboxActive]}>
+              {checked && <Ionicons name="checkmark" size={16} color="#fff" />}
+            </View>
+            <Text style={styles.checkboxText}>
+              I agree to the{" "}
+              <Text style={styles.linkText}>Terms & Conditions</Text>
+            </Text>
+          </TouchableOpacity>
+
+          {/* Submit Button */}
+          <TouchableOpacity
+            onPress={handleSignUp}
+            style={[styles.button, loading && { opacity: 0.7 }]}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Create Account</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate("SignIn")}>
+            <Text style={styles.signInLink}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 25,
+    paddingTop: 40,
+    paddingBottom: 20,
   },
-  logo: {
+  header: {
     alignItems: "center",
-    alignSelf: "center",
+    marginBottom: 30,
   },
-  image: {
-    width: 200,
-    height: 200,
+  logoImage: {
+    width: 150,
+    height: 150,
   },
   heading: {
     fontSize: 28,
     fontFamily: "Outfit-SemiBold",
-    textAlign: "center",
-    fontWeight: "300",
+    color: "#0A2166",
+    marginTop: -10,
   },
-  body: {
-    fontFamily: "Outfit-Regular",
+  subheading: {
     fontSize: 15,
-    alignSelf: "center",
-    alignItems: "center",
-    marginTop: 10,
+    fontFamily: "Outfit-Regular",
+    color: "#777",
+    marginTop: 5,
   },
-  Header: {
-    fontFamily: "Outfit-Regular",
-    fontSize: 15,
+  form: {
+    width: "100%",
+  },
+  inputLabel: {
+    fontFamily: "Outfit-SemiBold",
+    fontSize: 14,
+    color: "#0A2166",
+    marginBottom: 8,
     marginTop: 15,
   },
-  input: {
-    borderWidth: 1,
-    height: 48,
-    borderRadius: 8,
-    borderColor: "black",
+  inputWrapper: {
     flexDirection: "row",
-    width: 348,
-    paddingLeft: 3,
-    marginTop: 5,
     alignItems: "center",
+    backgroundColor: "#F5F6FA",
+    borderRadius: 12,
+    height: 55,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: "#EAECEF",
+  },
+  icon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontFamily: "Outfit-Regular",
+    fontSize: 16,
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 20,
   },
   checkbox: {
     height: 22,
     width: 22,
     borderWidth: 2,
-    borderColor: "#FF6600", // orange
+    borderColor: "#FF6600",
     borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 10,
+    marginRight: 12,
   },
-  text: {
+  checkboxActive: {
+    backgroundColor: "#FF6600",
+  },
+  checkboxText: {
     fontFamily: "Outfit-Regular",
     fontSize: 14,
+    color: "#666",
   },
-  text2: {
+  linkText: {
     color: "#FF6600",
     fontFamily: "Outfit-SemiBold",
   },
   button: {
     backgroundColor: "#0A2166",
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 40,
+    height: 55,
+    borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
+    marginTop: 35,
+    elevation: 4,
+    shadowColor: "#0A2166",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   buttonText: {
     color: "#fff",
     fontSize: 18,
     fontFamily: "Outfit-SemiBold",
-    fontWeight: "600",
-    textAlign: "center",
   },
-  text3: {
+  footer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 30,
+    marginBottom: 20,
+  },
+  footerText: {
     fontFamily: "Outfit-Regular",
-    fontSize: 14,
+    fontSize: 15,
+    color: "#666",
   },
-  text4: {
+  signInLink: {
     fontFamily: "Outfit-SemiBold",
-    fontSize: 14,
+    fontSize: 15,
     color: "#0A2166",
-    marginLeft: 5,
   },
 });

@@ -1,79 +1,69 @@
 const Task = require("../models/Task");
-const Project = require("../models/Project");
 
-// Create a new task
-exports.createTask = async (req, res) => {
-  try {
-    const { title, description, project, assignee, dueDate } = req.body;
-
-    const projectExists = await Project.findById(project);
-    if (!projectExists) return res.status(404).json({ message: "Project not found" });
-
-    const newTask = await Task.create({ title, description, project, assignee, dueDate });
-    res.status(201).json(newTask);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get all tasks
+/**
+ * GET /tasks
+ * Protected
+ */
 exports.getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find().populate("project", "name").populate("assignee", "name email");
-    res.status(200).json(tasks);
+    // ✅ userId comes from auth middleware
+    const userId = req.userId;
+
+    const tasks = await Task.find({ user: userId }).sort({ createdAt: -1 });
+    res.json(tasks);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Get tasks error:", error);
+    res.status(500).json({ message: "Failed to fetch tasks" });
   }
 };
 
-// Get a task by ID
-exports.getTaskById = async (req, res) => {
+/**
+ * POST /tasks
+ * Protected
+ */
+exports.addTask = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id)
-      .populate("project", "name")
-      .populate("assignee", "name email");
-    if (!task) return res.status(404).json({ message: "Task not found" });
-    res.status(200).json(task);
+    const { name, dueDate, projectId } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: "Task name is required" });
+    }
+
+    const task = await Task.create({
+      name,
+      dueDate,
+      project: projectId || null,
+      user: req.userId, // ✅ from token
+    });
+
+    res.status(201).json(task);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Add task error:", error);
+    res.status(500).json({ message: "Something went wrong on the server" });
   }
 };
 
-// Update a task
+/**
+ * PUT /tasks/:id
+ * Protected
+ */
 exports.updateTask = async (req, res) => {
   try {
-    const { title, description, status, assignee, dueDate } = req.body;
-    const task = await Task.findByIdAndUpdate(
-      req.params.id,
-      { title, description, status, assignee, dueDate },
-      { new: true }
+    const { id } = req.params;
+
+    const task = await Task.findOneAndUpdate(
+      { _id: id, user: req.userId }, // ✅ prevent updating others' tasks
+      req.body,
+      { new: true, runValidators: true }
     );
-    if (!task) return res.status(404).json({ message: "Task not found" });
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
-// Delete a task
-exports.deleteTask = async (req, res) => {
-  try {
-    const task = await Task.findByIdAndDelete(req.params.id);
-    if (!task) return res.status(404).json({ message: "Task not found" });
-    res.status(200).json({ message: "Task deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
 
-// Get all tasks for a specific project
-exports.getTasksByProject = async (req, res) => {
-  try {
-    const tasks = await Task.find({ project: req.params.projectId })
-      .populate("assignee", "name email")
-      .populate("project", "name");
-    res.status(200).json(tasks);
+    res.json(task);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Update task error:", error);
+    res.status(500).json({ message: "Failed to update task" });
   }
 };
