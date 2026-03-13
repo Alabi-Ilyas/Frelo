@@ -102,7 +102,6 @@ export default function Dashboard({ navigation }) {
         <Text style={styles.welcomeSub}>Manage your tasks effectively</Text>
       </View>
 
-      {/* --- SUMMARY CARDS --- */}
       <View style={styles.statsRow}>
         <View style={[styles.statCard, { backgroundColor: "#FF6600" }]}>
           <Text style={styles.statNum}>
@@ -125,7 +124,6 @@ export default function Dashboard({ navigation }) {
         </View>
       </View>
 
-      {/* --- TASKS --- */}
       <Text style={styles.sectionTitle}>My Tasks</Text>
       {tasks.map((task) => (
         <View
@@ -167,7 +165,6 @@ export default function Dashboard({ navigation }) {
         </View>
       ))}
 
-      {/* --- PROJECTS --- */}
       <Text style={[styles.sectionTitle, { marginTop: 30 }]}>
         Active Projects
       </Text>

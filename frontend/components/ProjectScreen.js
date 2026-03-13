@@ -38,11 +38,11 @@ export default function ProjectScreen() {
   });
   if (!fontsLoaded) return null;
 
-  // ===== Fetch projects from backend =====
+
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const data = await getProjects(); // already returns array
+      const data = await getProjects(); 
       setProjects(data);
     } catch (err) {
       console.error(err.response?.data || err.message);
@@ -55,12 +55,12 @@ export default function ProjectScreen() {
     fetchProjects();
   }, []);
 
-  // ===== Calculate project progress =====
+  
   const getProjectProgress = (project) => {
     return project.progress ? project.progress / 100 : 0;
   };
 
-  // ===== Add a new project =====
+  
   const handleAddProject = async () => {
     if (!newProject.title.trim()) return;
 

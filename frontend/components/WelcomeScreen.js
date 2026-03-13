@@ -99,7 +99,7 @@ export default function Welcome({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FF", // Very soft blue-tinted background
+    backgroundColor: "#F8F9FF", 
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 30,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: "#E8EBF5", // Soft accent circle
+    backgroundColor: "#E8EBF5", 
     zIndex: -1,
   },
   content: {

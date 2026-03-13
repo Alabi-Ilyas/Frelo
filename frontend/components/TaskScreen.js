@@ -33,13 +33,11 @@ export default function TaskScreen() {
   });
   if (!fontsLoaded) return null;
 
-  /* ======================
-     FETCH TASKS
-  ====================== */
+  
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const data = await getTasks(); // ✅ returns array
+      const data = await getTasks(); 
       setTasks(data);
     } catch (err) {
       console.error(err.response?.data || err.message);
@@ -53,9 +51,7 @@ export default function TaskScreen() {
     fetchTasks();
   }, []);
 
-  /* ======================
-     TOGGLE COMPLETE
-  ====================== */
+  
   const handleToggleComplete = async (task) => {
     try {
       const updated = await updateTask(task._id, {
@@ -69,9 +65,7 @@ export default function TaskScreen() {
     }
   };
 
-  /* ======================
-     ADD TASK
-  ====================== */
+ 
   const handleAddTask = async () => {
     if (!newTask.title.trim()) return;
 
@@ -79,13 +73,13 @@ export default function TaskScreen() {
       setAdding(true);
 
       const taskData = {
-        name: newTask.title, // ✅ backend expects "name"
+        name: newTask.title, 
         dueDate: newTask.date,
       };
 
-      const createdTask = await addTask(taskData); // ✅ API call
+      const createdTask = await addTask(taskData);
 
-      setTasks((prev) => [createdTask, ...prev]); // ✅ prepend new task
+      setTasks((prev) => [createdTask, ...prev]); 
       setNewTask({ title: "", date: new Date() });
       setShowModal(false);
       Keyboard.dismiss();
@@ -97,9 +91,7 @@ export default function TaskScreen() {
     }
   };
 
-  /* ======================
-     FILTER TABS
-  ====================== */
+ 
   const filteredTasks =
     selectedTab === "All"
       ? tasks
@@ -107,9 +99,7 @@ export default function TaskScreen() {
       ? tasks.filter((t) => t.done)
       : tasks.filter((t) => !t.done);
 
-  /* ======================
-     UI
-  ====================== */
+ 
   return (
     <View style={styles.container}>
       {/* Header */}

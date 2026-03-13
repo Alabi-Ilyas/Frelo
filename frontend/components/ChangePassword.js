@@ -32,7 +32,7 @@ export default function ChangePassword({ navigation }) {
 
     setLoading(true);
     try {
-      // ✅ Call change password API
+      
       await UserAPI.changePassword({ password, confirmPassword });
       Alert.alert("Success", "Password changed successfully!");
       navigation.navigate("SignIn");

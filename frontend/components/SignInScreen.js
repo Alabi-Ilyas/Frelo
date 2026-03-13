@@ -64,7 +64,7 @@ export default function SignIn({ navigation }) {
       >
         <StatusBar style="dark" />
 
-        {/* --- LOGO SECTION (Fixed sizing) --- */}
+       
         <View style={styles.headerSection}>
           <Image
             source={require("../assets/images/logo.png")}
@@ -80,7 +80,7 @@ export default function SignIn({ navigation }) {
           </Text>
         </View>
 
-        {/* --- INPUTS --- */}
+        
         <View style={styles.form}>
           <View style={styles.inputWrapper}>
             <Ionicons
@@ -129,7 +129,7 @@ export default function SignIn({ navigation }) {
             <Text style={styles.forgotText}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          {/* --- SIGN IN BUTTON --- */}
+          
           <TouchableOpacity
             onPress={handleSignIn}
             style={[styles.button, loading && { opacity: 0.7 }]}
@@ -143,7 +143,7 @@ export default function SignIn({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* --- FOOTER / SIGN UP NAVIGATION --- */}
+     
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
@@ -168,8 +168,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   image: {
-    width: 200, // Fixed width
-    height: 200, // Fixed height
+    width: 200, 
+    height: 200, 
   },
   textSection: {
     marginBottom: 30,
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F6FA", // Soft background instead of white
+    backgroundColor: "#F5F6FA", 
     borderRadius: 12,
     height: 55,
     paddingHorizontal: 15,
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   forgotText: {
-    color: "#FF6600", // Using your orange accent for calls to action
+    color: "#FF6600", 
     fontFamily: "Outfit-SemiBold",
     fontSize: 14,
   },

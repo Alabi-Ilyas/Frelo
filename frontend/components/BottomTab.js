@@ -2,7 +2,7 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { View, StyleSheet, Platform } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context"; // 👈 Crucial import
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Dashboard from "./DashboardScreen";
 import TaskScreen from "./TaskScreen";
 import ProjectScreen from "./ProjectScreen";
@@ -10,7 +10,7 @@ import ProjectScreen from "./ProjectScreen";
 const Tab = createBottomTabNavigator();
 
 export default function BottomTabs() {
-  const insets = useSafeAreaInsets(); // 👈 Hook to get device-specific gaps
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -38,7 +38,7 @@ export default function BottomTabs() {
         },
         tabBarStyle: {
           position: "absolute",
-          // Calculation: We add the safe gap to our desired 20px margin
+        
           bottom: Platform.OS === "ios" ? insets.bottom : 15, 
           left: 20,
           right: 20,
@@ -51,7 +51,7 @@ export default function BottomTabs() {
           shadowOpacity: 0.1,
           shadowRadius: 10,
           borderTopWidth: 0,
-          // Extra padding for the bottom of the bar itself
+        
           paddingBottom: 0, 
         },
         headerShown: false,
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     alignItems: "center",
     justifyContent: "center",
-    // Adjust icon vertical position
+   
     marginTop: 10,
   },
   activeDot: {

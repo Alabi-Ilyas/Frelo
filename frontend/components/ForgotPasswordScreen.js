@@ -28,7 +28,7 @@ export default function ForgotPassword({ navigation }) {
 
     setLoading(true);
     try {
-      // ✅ Call forgot password API
+   
       const res = await UserAPI.sendResetCode(email);
       Alert.alert("Success", "Reset code sent to your email!");
       navigation.navigate("ChangePassword");

@@ -75,7 +75,7 @@ export default function SignUp({ navigation }) {
         </View>
 
         <View style={styles.form}>
-          {/* Full Name Input */}
+          
           <Text style={styles.inputLabel}>Full Name</Text>
           <View style={styles.inputWrapper}>
             <Ionicons
@@ -92,7 +92,7 @@ export default function SignUp({ navigation }) {
             />
           </View>
 
-          {/* Email Input */}
+        
           <Text style={styles.inputLabel}>Email Address</Text>
           <View style={styles.inputWrapper}>
             <Ionicons
@@ -111,7 +111,7 @@ export default function SignUp({ navigation }) {
             />
           </View>
 
-          {/* Password Input */}
+       
           <Text style={styles.inputLabel}>Password</Text>
           <View style={styles.inputWrapper}>
             <Ionicons
@@ -136,7 +136,7 @@ export default function SignUp({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Terms Checkbox */}
+          
           <TouchableOpacity
             onPress={() => setChecked(!checked)}
             style={styles.checkboxContainer}
@@ -150,7 +150,7 @@ export default function SignUp({ navigation }) {
             </Text>
           </TouchableOpacity>
 
-          {/* Submit Button */}
+          
           <TouchableOpacity
             onPress={handleSignUp}
             style={[styles.button, loading && { opacity: 0.7 }]}
@@ -164,7 +164,7 @@ export default function SignUp({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Footer */}
+        
         <View style={styles.footer}>
           <Text style={styles.footerText}>Already have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate("SignIn")}>
