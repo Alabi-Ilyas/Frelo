@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useFonts } from "expo-font";
-import { UserAPI } from "../api/axios";
+import { UserAPI } from "../api/apiCalls";
 
 export default function ChangePassword({ navigation }) {
   const [fontsLoaded] = useFonts({
@@ -20,7 +20,7 @@ export default function ChangePassword({ navigation }) {
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
   if (!fontsLoaded) return null;
 
@@ -32,7 +32,6 @@ export default function ChangePassword({ navigation }) {
 
     setLoading(true);
     try {
-      
       await UserAPI.changePassword({ password, confirmPassword });
       Alert.alert("Success", "Password changed successfully!");
       navigation.navigate("SignIn");
@@ -40,7 +39,7 @@ export default function ChangePassword({ navigation }) {
       console.error(err.response?.data || err.message);
       Alert.alert(
         "Error",
-        err.response?.data?.message || "Something went wrong!"
+        err.response?.data?.message || "Something went wrong!",
       );
     } finally {
       setLoading(false);

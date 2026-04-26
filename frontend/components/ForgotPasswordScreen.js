@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useFonts } from "expo-font";
-import { UserAPI } from "../api/axios";
+import { UserAPI } from "../api/apiCalls";
 
 export default function ForgotPassword({ navigation }) {
   const [fontsLoaded] = useFonts({
@@ -28,7 +28,6 @@ export default function ForgotPassword({ navigation }) {
 
     setLoading(true);
     try {
-   
       const res = await UserAPI.sendResetCode(email);
       Alert.alert("Success", "Reset code sent to your email!");
       navigation.navigate("ChangePassword");
@@ -36,7 +35,7 @@ export default function ForgotPassword({ navigation }) {
       console.error(err.response?.data || err.message);
       Alert.alert(
         "Error",
-        err.response?.data?.message || "Something went wrong!"
+        err.response?.data?.message || "Something went wrong!",
       );
     } finally {
       setLoading(false);

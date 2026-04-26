@@ -1,309 +1,296 @@
-import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  ActivityIndicator,
   ScrollView,
+  View,
+  Text,
   TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ActivityIndicator,
+  RefreshControl, // Added for manual sync
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { getProjects, getTasks } from "../api/axios";
-import { loadToken } from "../utils/loadToken";
-import { setAuthToken } from "../api/axios";
+import { useFocusEffect } from "@react-navigation/native"; // Added for auto-refresh
+import { StatusBar } from "expo-status-bar";
+import {
+  Sparkles,
+  Briefcase,
+  Zap,
+  Plus,
+  ChevronRight,
+  RefreshCcw,
+} from "lucide-react-native";
+import { useAuth } from "../components/context/AuthContext";
+import { getDashboardData } from "../api/apiCalls";
 
-export default function Dashboard({ navigation }) {
+export default function DashboardScreen({ navigation }) {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tasks, setTasks] = useState([]);
-  const [projects, setProjects] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const init = async () => {
-      try {
-        setLoading(true);
-        const token = await loadToken();
-        if (!token) {
-          navigation.replace("SignIn");
-          return;
-        }
-        setAuthToken(token);
-
-        const [taskRes, projectRes] = await Promise.all([
-          getTasks(),
-          getProjects(),
-        ]);
-
-        const allTasks =
-          taskRes.tasks || (Array.isArray(taskRes) ? taskRes : []);
-        const allProjects =
-          projectRes.projects || (Array.isArray(projectRes) ? projectRes : []);
-
-        const filteredTasks = allTasks.filter((t) => {
-          const s = t.status?.toLowerCase().trim();
-          return (
-            s === "ongoing" ||
-            s === "completed" ||
-            s === "done" ||
-            s === "in progress"
-          );
-        });
-
-        setTasks(filteredTasks.length > 0 ? filteredTasks : allTasks);
-        setProjects(allProjects);
-      } catch (err) {
-        console.error("Dashboard Error:", err.message);
-      } finally {
-        setLoading(false);
+  // 1. Fetch Logic wrapped in useCallback
+  const fetchMyData = async () => {
+    try {
+      const res = await getDashboardData();
+      if (res.success) {
+        setData(res);
       }
-    };
-    init();
-  }, []);
+    } catch (error) {
+      console.error("Dashboard fetch error:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
-  if (loading) {
+  // 2. Refresh every time the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (!authLoading) {
+        fetchMyData();
+      }
+    }, [authLoading, isAuthenticated]),
+  );
+
+  // 3. Manual Pull-to-Refresh logic
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchMyData();
+  };
+
+  if (authLoading || (loading && !data)) {
     return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#0A2166" />
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#1A1C19" />
+        <Text style={styles.loaderText}>SYNCING WORKSPACE...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.root}>
       <StatusBar style="dark" />
-
-      {/* --- REFINED HEADER --- */}
-      <View style={styles.header}>
-        <View style={styles.logoWrapper}>
-          <Image
-            source={require("../assets/images/logo2.png")}
-            style={styles.logoMain}
-            resizeMode="contain"
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#1A1C19"
           />
-        </View>
-        <View style={styles.headerRight}>
-          {/* REPLACED IMAGE WITH ICON */}
+        }
+      >
+        {/* HEADER SECTION */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.tagline}>THE VERDANT EDITION</Text>
+            <Text style={styles.greeting}>
+              Hello, {user?.name?.split(" ")[0] || "User"}
+            </Text>
+          </View>
           <TouchableOpacity
-            style={styles.profileIconBtn}
-            onPress={() => navigation.navigate("Profile")}
+            onPress={() => navigation.openDrawer()}
+            style={styles.profileCircle}
           >
-            <Ionicons name="person-circle" size={45} color="#0A2166" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingsIcon}>
-            <Ionicons name="settings-outline" size={28} color="#0A2166" />
+            <Text style={styles.profileInitials}>{user?.name?.[0] || "U"}</Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      <View style={styles.welcomeBox}>
-        <Text style={styles.welcomeTitle}>👋 Welcome back, Ilyas</Text>
-        <Text style={styles.welcomeSub}>Manage your tasks effectively</Text>
-      </View>
-
-      <View style={styles.statsRow}>
-        <View style={[styles.statCard, { backgroundColor: "#FF6600" }]}>
-          <Text style={styles.statNum}>
-            {
-              tasks.filter((t) => t.status?.toLowerCase() !== "completed")
-                .length
-            }
-          </Text>
-          <Text style={styles.statLabel}>Ongoing</Text>
-        </View>
-
-        <View style={[styles.statCard, { backgroundColor: "#18C18F" }]}>
-          <Text style={styles.statNum}>
-            {
-              tasks.filter((t) => t.status?.toLowerCase() === "completed")
-                .length
-            }
-          </Text>
-          <Text style={styles.statLabel}>Completed</Text>
-        </View>
-      </View>
-
-      <Text style={styles.sectionTitle}>My Tasks</Text>
-      {tasks.map((task) => (
-        <View
-          key={task._id || Math.random().toString()}
-          style={styles.taskItem}
-        >
-          <View
-            style={[
-              styles.indicator,
-              {
-                backgroundColor:
-                  task.status?.toLowerCase() === "completed"
-                    ? "#18C18F"
-                    : "#FF6600",
-              },
-            ]}
-          />
-          <View style={styles.taskData}>
-            <Text style={styles.taskTitle}>
-              {task.title || task.name || "Task Item"}
+        {/* HERO STATS - Highlighting Live Counts */}
+        <View style={styles.heroGrid}>
+          <View style={[styles.statCard, styles.bgPrimary]}>
+            <Briefcase size={20} color="#fff" />
+            <Text style={styles.statNumber}>
+              {data?.stats?.activeProjects ?? 0}
             </Text>
-            <Text style={styles.taskDate}>
-              {task.dueDate || task.date
-                ? new Date(task.dueDate || task.date).toLocaleDateString()
-                : "No Date Set"}
+            <Text style={styles.statLabel}>ACTIVE PROJECTS</Text>
+          </View>
+          <View style={[styles.statCard, styles.bgSecondary]}>
+            <Zap size={20} color="#000" />
+            <Text style={[styles.statNumber, { color: "#000" }]}>
+              {data?.stats?.pendingTaskCount ?? 0}
+            </Text>
+            <Text style={[styles.statLabel, { color: "#000" }]}>
+              URGENT TASKS
             </Text>
           </View>
-          <Ionicons
-            name={
-              task.status?.toLowerCase() === "completed"
-                ? "checkmark-circle"
-                : "ellipsis-horizontal-circle"
-            }
-            size={28}
-            color={
-              task.status?.toLowerCase() === "completed" ? "#18C18F" : "#FF6600"
-            }
-          />
         </View>
-      ))}
 
-      <Text style={[styles.sectionTitle, { marginTop: 30 }]}>
-        Active Projects
-      </Text>
-      {projects.map((project) => (
-        <View
-          key={project._id || Math.random().toString()}
-          style={styles.projectItem}
+        {/* PRIORITY WORKFLOW */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>PRIORITY WORKFLOW</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Tasks")}>
+            <Text style={styles.viewAll}>VIEW ALL</Text>
+          </TouchableOpacity>
+        </View>
+
+        {data?.pendingTasks && data.pendingTasks.length > 0 ? (
+          data.pendingTasks.map((task) => (
+            <TouchableOpacity key={task._id} style={styles.itemCard}>
+              <View style={styles.iconBox}>
+                <Sparkles size={18} color="#6B7280" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.itemTitle} numberOfLines={1}>
+                  {task.text || task.title}
+                </Text>
+                <Text style={styles.itemSub}>
+                  {task.projectName || "Standard Infrastructure"}
+                </Text>
+              </View>
+              <ChevronRight size={16} color="#9CA3AF" />
+            </TouchableOpacity>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <RefreshCcw size={24} color="#E2E3DD" />
+            <Text style={styles.emptyText}>No pending tasks found.</Text>
+          </View>
+        )}
+
+        {/* FAB for Project Creation */}
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => navigation.navigate("Projects")}
         >
-          <View style={styles.projectTopRow}>
-            <View style={styles.pIconBg}>
-              <Ionicons name="folder" size={24} color="#0A2166" />
-            </View>
-            <View style={{ flex: 1, marginLeft: 15 }}>
-              <Text style={styles.pTitle}>{project.title || "Project"}</Text>
-              <Text style={styles.pClient}>
-                {project.client || "No Client"}
-              </Text>
-            </View>
-            <Text style={styles.pPercent}>{project.progress || 0}%</Text>
-          </View>
-          <View style={styles.progressBg}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${project.progress || 0}%` },
-              ]}
-            />
-          </View>
-        </View>
-      ))}
-
-      <View style={{ height: 60 }} />
-    </ScrollView>
+          <Plus color="#fff" size={24} />
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF", paddingHorizontal: 20 },
-  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
-
+  root: { flex: 1, backgroundColor: "#FBFDF8" },
+  container: { padding: 24, paddingBottom: 100 },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FBFDF8",
+  },
+  loaderText: {
+    marginTop: 12,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
+    color: "#1A1C19",
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 60,
-    marginBottom: 20,
+    marginTop: 20,
+    marginBottom: 32,
   },
-  logoWrapper: {
-    width: 120,
-    height: 40,
-    justifyContent: "center",
+  tagline: {
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
+    color: "#6B7280",
+    marginBottom: 4,
   },
-  logoMain: {
-    width: 100,
-    height: 100,
+  greeting: {
+    fontSize: 32,
+    fontWeight: "900",
+    letterSpacing: -1,
+    color: "#1A1C19",
   },
-  headerRight: {
-    flexDirection: "row",
+  profileCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#E2E3DD",
     alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
   },
-  profileIconBtn: {
-    marginRight: 10,
+  profileInitials: { fontWeight: "bold", color: "#1A1C19" },
+  heroGrid: { flexDirection: "row", gap: 12, marginBottom: 32 },
+  statCard: {
+    flex: 1,
+    padding: 24,
+    borderRadius: 32,
+    justifyContent: "space-between",
+    height: 160,
   },
-  settingsIcon: {
-    padding: 5,
+  bgPrimary: { backgroundColor: "#1A1C19" },
+  bgSecondary: { backgroundColor: "#D7E8CD" },
+  statNumber: {
+    fontSize: 42,
+    fontWeight: "900",
+    color: "#fff",
+    letterSpacing: -2,
   },
-
-  welcomeBox: { marginBottom: 30 },
-  welcomeTitle: { fontSize: 26, fontWeight: "bold", color: "#0A2166" },
-  welcomeSub: { fontSize: 16, color: "#666", marginTop: 4 },
-
-  statsRow: {
+  statLabel: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#A0A29C",
+    letterSpacing: 1,
+  },
+  sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  statCard: {
-    width: "47%",
-    height: 100,
-    borderRadius: 20,
-    justifyContent: "center",
     alignItems: "center",
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    color: "#1A1C19",
+  },
+  viewAll: { fontSize: 10, fontWeight: "bold", color: "#6B7280" },
+  itemCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#F0F1EB",
+  },
+  iconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "#F3F4EF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 16,
+  },
+  itemTitle: { fontSize: 16, fontWeight: "700", color: "#1A1C19" },
+  itemSub: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 40,
+    opacity: 0.5,
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "#6B7280",
+    marginTop: 12,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  fab: {
+    position: "absolute",
+    bottom: 30,
+    right: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#1A1C19",
+    alignItems: "center",
+    justifyContent: "center",
     elevation: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
   },
-  statNum: { fontSize: 30, color: "#FFF", fontWeight: "bold" },
-  statLabel: { fontSize: 15, color: "#FFF", fontWeight: "600" },
-
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#0A2166",
-    marginBottom: 15,
-    marginTop: 25,
-  },
-  taskItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    padding: 18,
-    borderRadius: 20,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#F0F0F0",
-    elevation: 2,
-  },
-  indicator: { width: 4, height: 30, borderRadius: 2, marginRight: 15 },
-  taskData: { flex: 1 },
-  taskTitle: { fontSize: 17, fontWeight: "700", color: "#333" },
-  taskDate: { fontSize: 13, color: "#999", marginTop: 4 },
-
-  projectItem: {
-    backgroundColor: "#FFF",
-    padding: 20,
-    borderRadius: 24,
-    marginBottom: 15,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: "#EEE",
-  },
-  projectTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  pIconBg: {
-    width: 45,
-    height: 45,
-    backgroundColor: "#EBF0FF",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  pTitle: { fontSize: 17, fontWeight: "700", color: "#0A2166" },
-  pClient: { fontSize: 13, color: "#777" },
-  pPercent: { fontWeight: "bold", color: "#0A2166", fontSize: 15 },
-  progressBg: { height: 8, backgroundColor: "#F0F0F0", borderRadius: 4 },
-  progressFill: { height: 8, backgroundColor: "#0A2166", borderRadius: 4 },
 });

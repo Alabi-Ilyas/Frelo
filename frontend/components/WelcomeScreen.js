@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useFonts } from "expo-font";
+import { ArrowRight } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -19,21 +20,20 @@ export default function Welcome({ navigation }) {
     "Outfit-SemiBold": require("../assets/fonts/Outfit-SemiBold.ttf"),
   });
 
-  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     if (fontsLoaded) {
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(slideAnim, {
           toValue: 0,
-          duration: 1000,
+          duration: 800,
           useNativeDriver: true,
         }),
       ]).start();
@@ -46,8 +46,8 @@ export default function Welcome({ navigation }) {
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      {/* Decorative Background Element */}
-      <View style={styles.circleDecorator} />
+      {/* Decorative Branding */}
+      <View style={styles.topAccent} />
 
       <Animated.View
         style={[
@@ -55,7 +55,7 @@ export default function Welcome({ navigation }) {
           { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
         ]}
       >
-        {/* Logo Area */}
+        {/* Simplified Logo Area */}
         <View style={styles.logoContainer}>
           <Image
             source={require("./../assets/images/logo.png")}
@@ -64,11 +64,13 @@ export default function Welcome({ navigation }) {
           />
         </View>
 
-        {/* Text Area */}
+        {/* Text Area - Editorial Style */}
         <View style={styles.textContainer}>
-          <Text style={styles.heading}>Master Your Craft</Text>
+          <Text style={styles.tagline}>VERDANT EDITION • v1.0.4</Text>
+          <Text style={styles.heading}>Infrastructure for Modern Work</Text>
           <Text style={styles.body}>
-            Your work. Your progress.{"\n"}All in one professional place.
+            A unified ecosystem for freelancers and clients to build, manage,
+            and scale projects.
           </Text>
         </View>
 
@@ -78,7 +80,8 @@ export default function Welcome({ navigation }) {
             style={styles.getStartedBtn}
             onPress={() => navigation.navigate("SignUp")}
           >
-            <Text style={styles.getStartedText}>Get Started</Text>
+            <Text style={styles.getStartedText}>GET STARTED</Text>
+            <ArrowRight size={18} color="#FFF" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -86,8 +89,7 @@ export default function Welcome({ navigation }) {
             onPress={() => navigation.navigate("SignIn")}
           >
             <Text style={styles.signInText}>
-              Already have an account?{" "}
-              <Text style={styles.signInLink}>Sign In</Text>
+              ALREADY REGISTERED? <Text style={styles.signInLink}>LOG IN</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -99,86 +101,95 @@ export default function Welcome({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FF", 
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 30,
+    backgroundColor: "#FBFDF8", // Recessed Sage/White
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
-  circleDecorator: {
+  topAccent: {
     position: "absolute",
-    top: -50,
-    right: -50,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: "#E8EBF5", 
+    top: -100,
+    left: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: "#D7E8CD", // Very soft sage green
+    opacity: 0.3,
     zIndex: -1,
   },
   content: {
-    width: "100%",
-    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "flex-start", // Left-aligned for a modern architect feel
   },
   logoContainer: {
-    marginBottom: 20,
-    shadowColor: "#0A2166",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
+    marginBottom: 40,
   },
   image: {
-    width: width * 0.8,
-    height: width * 0.8,
+    width: 80, // Smaller, more professional logo size
+    height: 80,
   },
   textContainer: {
-    alignItems: "center",
-    marginBottom: 50,
+    marginBottom: 60,
+  },
+  tagline: {
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
+    color: "#6B7280",
+    marginBottom: 12,
   },
   heading: {
-    fontSize: 34,
-    fontFamily: "Outfit-SemiBold",
-    color: "#0A2166",
-    textAlign: "center",
+    fontSize: 42,
+    fontWeight: "900",
+    color: "#1A1C19",
+    lineHeight: 48,
+    letterSpacing: -1.5,
   },
   body: {
-    fontFamily: "Outfit-Regular",
-    fontSize: 18,
-    color: "#666",
-    textAlign: "center",
-    marginTop: 15,
-    lineHeight: 26,
+    fontSize: 16,
+    color: "#6B7280",
+    marginTop: 20,
+    lineHeight: 24,
+    maxWidth: "90%",
   },
   buttonContainer: {
     width: "100%",
-    alignItems: "center",
   },
   getStartedBtn: {
-    backgroundColor: "#0A2166",
+    backgroundColor: "#1A1C19",
     width: "100%",
-    paddingVertical: 18,
-    borderRadius: 16,
+    height: 64,
+    borderRadius: 32,
+    flexDirection: "row",
     alignItems: "center",
-    elevation: 8,
-    shadowColor: "#0A2166",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    justifyContent: "center",
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   getStartedText: {
     color: "#fff",
-    fontSize: 18,
-    fontFamily: "Outfit-SemiBold",
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 2,
   },
   signInBtn: {
-    marginTop: 25,
-    padding: 10,
+    marginTop: 30,
+    alignItems: "center",
+    width: "100%",
   },
   signInText: {
-    fontFamily: "Outfit-Regular",
-    fontSize: 16,
-    color: "#666",
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#6B7280",
+    letterSpacing: 1,
   },
   signInLink: {
-    color: "#0A2166",
-    fontFamily: "Outfit-SemiBold",
+    color: "#1A1C19",
   },
 });

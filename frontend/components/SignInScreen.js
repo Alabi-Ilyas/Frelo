@@ -1,4 +1,3 @@
-import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -13,46 +12,50 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { useFonts } from "expo-font";
-import { loginUser } from "../api/axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { setAuthToken } from "../api/axios";
-import { Ionicons } from "@expo/vector-icons"; // Added for better visuals
+import { StatusBar } from "expo-status-bar";
+import { useAuth } from "../components/context/AuthContext"; // Import your central auth logic
+import { loginUser } from "../api/apiCalls";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react-native";
 
 export default function SignIn({ navigation }) {
-  const [fontsLoaded] = useFonts({
-    "Outfit-Regular": require("../assets/fonts/Outfit-Regular.ttf"),
-    "Outfit-SemiBold": require("../assets/fonts/Outfit-SemiBold.ttf"),
-  });
-
+  const { login } = useAuth(); // Use the login function from context
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  if (!fontsLoaded) return null;
-
   const handleSignIn = async () => {
-    if (!email || !password) {
-      return Alert.alert("Missing Info", "Email and password are required.");
+    // Trim email to avoid hidden space validation errors on backend
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail || !password) {
+      return Alert.alert("Required", "Email and password are required.");
     }
 
     setLoading(true);
     try {
-      const res = await loginUser({ email, password });
-      await AsyncStorage.setItem("token", res.token);
-      setAuthToken(res.token);
-      navigation.replace("Dashboard");
+      // 1. Match your backend's POST /api/auth/login { email, password }
+      const res = await loginUser({ email: cleanEmail, password });
+
+      // 2. Your backend sends "success: true" on status 200
+      if (res && res.success) {
+        // 3. IMPORTANT: Match backend keys: res.accessToken and res.refreshToken
+        // Do NOT use snake_case here.
+        await login(res.user, res.accessToken, res.refreshToken);
+
+        // Success! App.js will now auto-switch to MainApp.
+      }
     } catch (err) {
-      Alert.alert(
-        "Login Failed",
-        err.response?.data?.message || "Invalid credentials",
-      );
+      // Extracting the error from your R.unauthorized or R.serverError utilities
+      const errorMsg =
+        err.response?.data?.message || "Check your network connection";
+
+      Alert.alert("Login Failed", errorMsg);
+      console.log("Full Backend Error:", err.response?.data);
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -64,33 +67,20 @@ export default function SignIn({ navigation }) {
       >
         <StatusBar style="dark" />
 
-       
-        <View style={styles.headerSection}>
-          <Image
-            source={require("../assets/images/logo.png")}
-            style={styles.image}
-            resizeMode="contain"
-          />
-        </View>
-
-        <View style={styles.textSection}>
-          <Text style={styles.heading}>Welcome Back!</Text>
-          <Text style={styles.subHeading}>
-            Sign in to continue your progress
+        <View style={styles.header}>
+          <Text style={styles.tagline}>CONTINUE YOUR JOURNEY</Text>
+          <Text style={styles.heading}>Welcome Back</Text>
+          <Text style={styles.subheading}>
+            Enter your credentials to access your portal
           </Text>
         </View>
 
-        
         <View style={styles.form}>
+          <Text style={styles.inputLabel}>EMAIL ADDRESS</Text>
           <View style={styles.inputWrapper}>
-            <Ionicons
-              name="mail-outline"
-              size={20}
-              color="#666"
-              style={styles.inputIcon}
-            />
+            <Mail size={18} color="#6B7280" style={styles.icon} />
             <TextInput
-              placeholder="Email Address"
+              placeholder="email@example.com"
               style={styles.input}
               value={email}
               onChangeText={setEmail}
@@ -99,26 +89,22 @@ export default function SignIn({ navigation }) {
             />
           </View>
 
+          <Text style={styles.inputLabel}>PASSWORD</Text>
           <View style={styles.inputWrapper}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={20}
-              color="#666"
-              style={styles.inputIcon}
-            />
+            <Lock size={18} color="#6B7280" style={styles.icon} />
             <TextInput
-              placeholder="Password"
+              placeholder="••••••••"
               style={styles.input}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons
-                name={showPassword ? "eye-off-outline" : "eye-outline"}
-                size={20}
-                color="#666"
-              />
+              {showPassword ? (
+                <EyeOff size={18} color="#6B7280" />
+              ) : (
+                <Eye size={18} color="#6B7280" />
+              )}
             </TouchableOpacity>
           </View>
 
@@ -129,27 +115,28 @@ export default function SignIn({ navigation }) {
             <Text style={styles.forgotText}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          
           <TouchableOpacity
             onPress={handleSignIn}
-            style={[styles.button, loading && { opacity: 0.7 }]}
+            style={styles.button}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
+              <Text style={styles.buttonText}>SIGN IN</Text>
             )}
           </TouchableOpacity>
         </View>
 
-     
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
-            <Text style={styles.signUpLink}>Sign Up</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("SignUp")}
+          style={styles.footer}
+        >
+          <Text style={styles.footerText}>
+            NEW TO FRELOPRO?{" "}
+            <Text style={styles.signUpLink}>CREATE ACCOUNT</Text>
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -158,97 +145,93 @@ export default function SignIn({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 30,
-    paddingBottom: 40,
+    backgroundColor: "#FBFDF8",
+    padding: 24,
     justifyContent: "center",
   },
-  headerSection: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  image: {
-    width: 200, 
-    height: 200, 
-  },
-  textSection: {
-    marginBottom: 30,
-    alignItems: "flex-start",
+  header: { marginBottom: 40 },
+  tagline: {
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2,
+    color: "#6B7280",
+    marginBottom: 4,
   },
   heading: {
     fontSize: 32,
-    fontFamily: "Outfit-SemiBold",
-    color: "#0A2166",
+    fontWeight: "900",
+    color: "#1A1C19",
+    letterSpacing: -1,
   },
-  subHeading: {
-    fontSize: 16,
-    color: "#777",
-    fontFamily: "Outfit-Regular",
-    marginTop: 5,
+  subheading: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginTop: 8,
+    lineHeight: 20,
   },
-  form: {
-    width: "100%",
+  form: { width: "100%" },
+  inputLabel: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#1A1C19",
+    marginBottom: 8,
+    letterSpacing: 1,
+    marginTop: 20,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F6FA", 
-    borderRadius: 12,
-    height: 55,
-    paddingHorizontal: 15,
-    marginBottom: 15,
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    height: 56,
+    paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: "#EAECEF",
+    borderColor: "#F0F1EB",
   },
-  inputIcon: {
-    marginRight: 10,
-  },
+  icon: { marginRight: 12 },
   input: {
     flex: 1,
-    height: "100%",
-    fontFamily: "Outfit-Regular",
-    fontSize: 16,
-    color: "#000",
+    fontSize: 15,
+    color: "#1A1C19",
+    fontWeight: "500",
   },
   forgotBtn: {
     alignSelf: "flex-end",
-    marginBottom: 25,
+    marginTop: 12,
+    marginBottom: 30,
   },
   forgotText: {
-    color: "#FF6600", 
-    fontFamily: "Outfit-SemiBold",
-    fontSize: 14,
+    color: "#1A1C19",
+    fontWeight: "700",
+    fontSize: 12,
   },
   button: {
-    backgroundColor: "#0A2166",
-    height: 55,
-    borderRadius: 12,
+    backgroundColor: "#1A1C19",
+    height: 56,
+    borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    elevation: 4,
-    shadowColor: "#0A2166",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 18,
-    fontFamily: "Outfit-SemiBold",
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 2,
   },
   footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 35,
+    marginTop: 40,
+    alignItems: "center",
   },
   footerText: {
-    fontSize: 15,
-    color: "#666",
-    fontFamily: "Outfit-Regular",
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#6B7280",
+    letterSpacing: 1,
   },
-  signUpLink: {
-    fontSize: 15,
-    color: "#0A2166",
-    fontFamily: "Outfit-SemiBold",
-  },
+  signUpLink: { color: "#1A1C19" },
 });

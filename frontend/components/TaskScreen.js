@@ -1,390 +1,300 @@
 import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
-  View,
   Text,
+  View,
+  FlatList,
   TouchableOpacity,
-  ScrollView,
-  Image,
-  Modal,
-  TextInput,
-  Platform,
-  Keyboard,
   ActivityIndicator,
+  RefreshControl,
   Alert,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useFonts } from "expo-font";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { getTasks, addTask, updateTask, deleteTask } from "../api/axios"; // ✅ correct imports
+import { StatusBar } from "expo-status-bar";
+import { Clock, AlertCircle, Plus, LayoutGrid } from "lucide-react-native";
+// 1. IMPORT MODAL AND API
+import { fetchAllTasks, getProjects, addTask } from "../api/apiCalls";
+import ScreenHeader from "./ScreenHeader";
+import AddTaskModal from "../components/modals/AddTaskModal";
 
-export default function TaskScreen() {
-  const [selectedTab, setSelectedTab] = useState("All");
-  const [showModal, setShowModal] = useState(false);
-  const [newTask, setNewTask] = useState({ title: "", date: new Date() });
-  const [showDatePicker, setShowDatePicker] = useState(false);
+export default function TasksScreen({ navigation }) {
   const [tasks, setTasks] = useState([]);
+  const [projects, setProjects] = useState([]); // 2. PROJECTS STATE
   const [loading, setLoading] = useState(true);
-  const [adding, setAdding] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false); // 3. MODAL VISIBILITY
 
-  const [fontsLoaded] = useFonts({
-    "Outfit-Regular": require("../assets/fonts/Outfit-Regular.ttf"),
-    "Outfit-SemiBold": require("../assets/fonts/Outfit-SemiBold.ttf"),
-  });
-  if (!fontsLoaded) return null;
+  const loadData = async () => {
+    try {
+      // Fetch both tasks and projects in parallel for the modal
+      const [taskRes, projectRes] = await Promise.all([
+        fetchAllTasks(),
+        getProjects(),
+      ]);
 
-  
-  const fetchTasks = async () => {
+      if (taskRes.success) setTasks(taskRes.tasks);
+      if (projectRes.success) setProjects(projectRes.projects);
+    } catch (err) {
+      console.error("Data load error:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadData();
+  };
+
+  // 4. HANDLE NEW TASK SAVE
+  const handleSaveTask = async (projectId, taskData) => {
     try {
       setLoading(true);
-      const data = await getTasks(); 
-      setTasks(data);
+      // Call API with two separate arguments as defined in your apiCalls.js
+      const res = await addTask(projectId, taskData);
+
+      // Your backend returns R.created(res, { task, ... })
+      if (res.task || res.success) {
+        loadData(); // Refresh list
+        setModalVisible(false);
+      } else {
+        Alert.alert("Error", res.message || "Could not create task");
+      }
     } catch (err) {
-      console.error(err.response?.data || err.message);
-      Alert.alert("Error", "Failed to fetch tasks");
+      // Log the specific backend error message for easier debugging
+      console.error("Add task error:", err.response?.data || err.message);
+      const errorMsg =
+        err.response?.data?.message || "Server connection failed";
+      Alert.alert("Error", errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  
-  const handleToggleComplete = async (task) => {
-    try {
-      const updated = await updateTask(task._id, {
-        done: !task.done,
-      });
-
-      setTasks((prev) => prev.map((t) => (t._id === task._id ? updated : t)));
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-      Alert.alert("Error", "Failed to update task");
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Overdue":
+        return "#EF4444";
+      case "In Progress":
+        return "#F59E0B";
+      case "Done":
+        return "#10B981";
+      default:
+        return "#6B7280";
     }
   };
 
- 
-  const handleAddTask = async () => {
-    if (!newTask.title.trim()) return;
+  const renderTaskCard = ({ item }) => (
+    <TouchableOpacity
+      style={styles.taskCard}
+      onPress={() =>
+        navigation.navigate("TaskDetail", {
+          taskId: item._id,
+          projectId: item.projectId,
+        })
+      }
+    >
+      <View style={styles.cardHeader}>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusColor(item.status) + "15" },
+          ]}
+        >
+          <Text
+            style={[styles.statusText, { color: getStatusColor(item.status) }]}
+          >
+            {item.status.toUpperCase()}
+          </Text>
+        </View>
+        <Text style={styles.projectLabel}>{item.projectName}</Text>
+      </View>
 
-    try {
-      setAdding(true);
+      <Text style={styles.taskTitle}>{item.text}</Text>
 
-      const taskData = {
-        name: newTask.title, 
-        dueDate: newTask.date,
-      };
+      <View style={styles.cardFooter}>
+        <View style={styles.footerItem}>
+          <Clock size={14} color="#6B7280" />
+          <Text style={styles.footerText}>
+            {item.due ? new Date(item.due).toLocaleDateString() : "No Deadline"}
+          </Text>
+        </View>
+        {item.status === "Overdue" && <AlertCircle size={16} color="#EF4444" />}
+      </View>
+    </TouchableOpacity>
+  );
 
-      const createdTask = await addTask(taskData);
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#1A1C19" />
+      </View>
+    );
+  }
 
-      setTasks((prev) => [createdTask, ...prev]); 
-      setNewTask({ title: "", date: new Date() });
-      setShowModal(false);
-      Keyboard.dismiss();
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-      Alert.alert("Error", "Failed to add task");
-    } finally {
-      setAdding(false);
-    }
-  };
-
- 
-  const filteredTasks =
-    selectedTab === "All"
-      ? tasks
-      : selectedTab === "Completed"
-      ? tasks.filter((t) => t.done)
-      : tasks.filter((t) => !t.done);
-
- 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowModal(true)}
-        >
-          <Ionicons name="add" size={28} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.title}>My Tasks</Text>
-        <Image
-          source={require("../assets/images/Profile.png")}
-          style={styles.profileImage}
-        />
-      </View>
+      <StatusBar style="dark" />
 
-      {/* Tabs */}
-      <View style={styles.tabContainer}>
-        {["All", "Ongoing", "Completed"].map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tab, selectedTab === tab && styles.activeTab]}
-            onPress={() => setSelectedTab(tab)}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                selectedTab === tab && styles.activeTabText,
-              ]}
-            >
-              {tab}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <ScreenHeader
+        title="Task Registry"
+        tagline={new Date().toDateString().toUpperCase()}
+      />
 
-      {/* Task List */}
-      {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#0A2166"
-          style={{ marginTop: 50 }}
-        />
-      ) : (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {filteredTasks.map((task) => (
-            <View key={task._id} style={styles.taskCard}>
-              <TouchableOpacity
-                style={styles.taskLeft}
-                onPress={() => handleToggleComplete(task)}
-              >
-                <Ionicons
-                  name={task.completed ? "checkbox-outline" : "square-outline"}
-                  size={24}
-                  color={task.completed ? "#2ECC71" : "#C4C4C4"}
-                  style={{ marginRight: 10 }}
-                />
-                <View>
-                  <Text
-                    style={[
-                      styles.taskTitle,
-                      task.done && {
-                        textDecorationLine: "line-through",
-                        color: "#777",
-                      },
-                    ]}
-                  >
-                    {task.name}
-                  </Text>
-
-                  <Text style={styles.taskTime}>
-                    {task.dueDate
-                      ? new Date(task.dueDate).toLocaleString()
-                      : "No due date"}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              <View
-                style={[
-                  styles.statusBadge,
-                  { backgroundColor: task.completed ? "#2ECC71" : "#FF6600" },
-                ]}
-              >
-                <Text style={styles.statusText}>
-                  {task.completed ? "Completed" : "Ongoing"}
-                </Text>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      )}
-
-      {/* Floating Add Button */}
-      <TouchableOpacity
-        style={styles.floatingBtn}
-        onPress={() => setShowModal(true)}
-      >
-        <Ionicons name="add" size={30} color="white" />
-      </TouchableOpacity>
-
-      {/* Add Task Modal */}
-      <Modal visible={showModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Add New Task</Text>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Task title"
-              value={newTask.title}
-              onChangeText={(text) =>
-                setNewTask((prev) => ({ ...prev, title: text }))
-              }
-            />
-
-            <TouchableOpacity
-              onPress={() => setShowDatePicker(true)}
-              style={styles.datePickerBtn}
-            >
-              <Ionicons name="calendar-outline" size={20} color="#0A2166" />
-              <Text style={styles.dateText}>
-                {newTask.date.toLocaleString()}
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalBtn, { backgroundColor: "#0A2166" }]}
-                onPress={handleAddTask}
-                disabled={adding}
-              >
-                {adding ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.modalBtnText}>Add Task</Text>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.modalBtn, { backgroundColor: "#ccc" }]}
-                onPress={() => setShowModal(false)}
-              >
-                <Text style={styles.modalBtnText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+      <View style={styles.summaryStrip}>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryCount}>{tasks.length}</Text>
+          <Text style={styles.summaryLabel}>Total Tasks</Text>
         </View>
-      </Modal>
+        <View style={styles.divider} />
+        <View style={styles.summaryItem}>
+          <Text style={[styles.summaryCount, { color: "#EF4444" }]}>
+            {tasks.filter((t) => t.status === "Overdue").length}
+          </Text>
+          <Text style={styles.summaryLabel}>Attention Required</Text>
+        </View>
+      </View>
 
-      {showDatePicker && (
-        <DateTimePicker
-          value={newTask.date}
-          mode="datetime"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(e, date) => {
-            setShowDatePicker(false);
-            if (date) setNewTask((p) => ({ ...p, date }));
-          }}
-        />
-      )}
+      <FlatList
+        data={tasks}
+        keyExtractor={(item) => item._id}
+        renderItem={renderTaskCard}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <LayoutGrid size={48} color="#D1D5DB" />
+            <Text style={styles.emptyText}>
+              All systems clear. No tasks found.
+            </Text>
+          </View>
+        }
+      />
+
+      {/* 5. ADD THE MODAL COMPONENT */}
+      <AddTaskModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSave={handleSaveTask}
+        projects={projects}
+      />
+
+      {/* 6. FAB TRIGGERS MODAL INSTEAD OF NAV */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setModalVisible(true)}
+      >
+        <Plus color="#FFF" size={24} />
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingTop: 50,
-  },
+  container: { flex: 1, backgroundColor: "#FBFDF8" },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  addButton: {
-    backgroundColor: "#FF6600",
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: { fontFamily: "Outfit-SemiBold", fontSize: 28, color: "#0A2166" },
-  profileImage: { width: 45, height: 45 },
-  tabContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 20,
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 25,
-    marginBottom: 10,
+    alignItems: "flex-end",
   },
-  tab: { paddingVertical: 6, paddingHorizontal: 15, borderRadius: 10 },
-  activeTab: { backgroundColor: "#0A2166" },
-  tabText: { fontFamily: "Outfit-Regular", fontSize: 16, color: "#000" },
-  activeTabText: { color: "#fff", fontFamily: "Outfit-SemiBold" },
-  taskCard: {
+  dateLabel: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#6B7280",
+    letterSpacing: 1.5,
+  },
+  heading: {
+    fontSize: 32,
+    fontWeight: "900",
+    color: "#1A1C19",
+    letterSpacing: -1,
+  },
+  filterBtn: {
+    padding: 8,
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#F0F1EB",
+  },
+  summaryStrip: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F9F9F9",
+    backgroundColor: "#FFF",
+    marginHorizontal: 24,
     borderRadius: 16,
-    padding: 15,
-    marginVertical: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#F0F1EB",
+    marginBottom: 20,
   },
-  taskLeft: { flexDirection: "row", alignItems: "center" },
-  taskTitle: { fontFamily: "Outfit-SemiBold", fontSize: 17, color: "#0A2166" },
-  taskTime: { fontFamily: "Outfit-Regular", fontSize: 14, color: "#444" },
-  statusBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
-  statusText: { color: "#fff", fontFamily: "Outfit-SemiBold", fontSize: 13 },
-  floatingBtn: {
-    position: "absolute",
-    bottom: 30,
-    right: 25,
-    backgroundColor: "#0A2166",
-    width: 55,
-    height: 55,
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 5,
+  summaryItem: { flex: 1, alignItems: "center" },
+  summaryCount: { fontSize: 20, fontWeight: "900", color: "#1A1C19" },
+  summaryLabel: {
+    fontSize: 10,
+    color: "#6B7280",
+    marginTop: 2,
+    fontWeight: "700",
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    width: "90%",
-    backgroundColor: "#fff",
+  divider: { width: 1, backgroundColor: "#F0F1EB" },
+  listContent: { paddingHorizontal: 24, paddingBottom: 100 },
+  taskCard: {
+    backgroundColor: "#FFF",
     borderRadius: 20,
     padding: 20,
-  },
-  modalTitle: {
-    fontFamily: "Outfit-SemiBold",
-    fontSize: 20,
-    color: "#0A2166",
-    marginBottom: 10,
-  },
-  input: {
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    padding: 10,
-    fontFamily: "Outfit-Regular",
-    marginBottom: 10,
+    borderColor: "#F0F1EB",
   },
-  datePickerBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
-  },
-  dateText: {
-    fontFamily: "Outfit-Regular",
-    color: "#0A2166",
-  },
-  modalButtons: {
+  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
+    marginBottom: 12,
   },
-  modalBtn: {
-    flex: 1,
-    marginHorizontal: 5,
-    borderRadius: 10,
-    paddingVertical: 10,
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  statusText: { fontSize: 9, fontWeight: "900", letterSpacing: 0.5 },
+  projectLabel: { fontSize: 11, fontWeight: "700", color: "#6B7280" },
+  taskTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#1A1C19",
+    lineHeight: 22,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#FBFDF8",
   },
-  modalBtnText: {
-    color: "#fff",
-    fontFamily: "Outfit-SemiBold",
+  footerItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  footerText: { fontSize: 12, color: "#6B7280", fontWeight: "600" },
+  fab: {
+    position: "absolute",
+    bottom: 30,
+    right: 24,
+    backgroundColor: "#1A1C19",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
+  emptyState: { alignItems: "center", marginTop: 100 },
+  emptyText: { marginTop: 16, color: "#9CA3AF", fontWeight: "600" },
 });
