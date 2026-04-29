@@ -1,203 +1,142 @@
 import React, { useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  StyleSheet, Text, View, TextInput, TouchableOpacity,
+  Alert, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
+import { Hammer, Briefcase, Eye, EyeOff, Check, ArrowRight } from "lucide-react-native";
 import { registerUser } from "../api/apiCalls";
+import { C } from "../utils/theme";
 
 export default function SignUp({ navigation }) {
-  const [role, setRole] = useState("freelancer"); // Role state
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [role, setRole]               = useState("freelancer");
+  const [fullName, setFullName]       = useState("");
+  const [email, setEmail]             = useState("");
+  const [password, setPassword]       = useState("");
   const [businessName, setBusinessName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [checked, setChecked] = useState(false);
+  const [loading, setLoading]         = useState(false);
+  const [showPwd, setShowPwd]         = useState(false);
+  const [checked, setChecked]         = useState(false);
+  const [error, setError]             = useState("");
 
   const handleSignUp = async () => {
-    if (!checked) return Alert.alert("Terms", "Please agree to the terms.");
-    if (!fullName || !email || !password || !businessName) {
-      return Alert.alert("Required", "Please fill all fields.");
-    }
-
-    setLoading(true);
+    if (!checked) return setError("Please agree to the Terms & Conditions.");
+    if (!fullName || !email || !password || !businessName) return setError("Please fill all fields.");
+    setLoading(true); setError("");
     try {
-      const userData = {
-        name: fullName,
-        email: email,
-        password: password,
-        businessName: businessName,
-        role: role, // Dynamic role
-      };
-
-      const result = await registerUser(userData);
-      if (result.success) {
-        Alert.alert("Success", "Account created!");
-        navigation.navigate("SignIn");
-      }
+      const res = await registerUser({ name: fullName, email, password, businessName, role });
+      if (res.success) { Alert.alert("Account Created", "You can now sign in."); navigation.navigate("SignIn"); }
     } catch (err) {
-      Alert.alert(
-        "Error",
-        err.response?.data?.message || "Registration failed",
-      );
-    } finally {
-      setLoading(false);
-    }
+      setError(err.response?.data?.message || "Registration failed.");
+    } finally { setLoading(false); }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-    >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         <StatusBar style="dark" />
 
-        <View style={styles.header}>
-          <Text style={styles.tagline}>JOIN THE ECOSYSTEM</Text>
-          <Text style={styles.heading}>Create Account</Text>
+        {/* Brand */}
+        <View style={s.brand}>
+          <Text style={s.brandName}>FreloPro</Text>
+          <Text style={s.brandTag}>VERDANT EDITION</Text>
         </View>
 
-        {/* ROLE SELECTOR */}
-        <Text style={styles.inputLabel}>I want to join as a:</Text>
-        <View style={styles.roleContainer}>
-          <TouchableOpacity
-            style={[
-              styles.roleCard,
-              role === "freelancer" && styles.roleCardActive,
-            ]}
-            onPress={() => setRole("freelancer")}
-          >
-            <Ionicons
-              name="hammer-outline"
-              size={20}
-              color={role === "freelancer" ? "#FFF" : "#1A1C19"}
-            />
-            <Text
-              style={[
-                styles.roleCardText,
-                role === "freelancer" && { color: "#FFF" },
-              ]}
-            >
-              FREELANCER
-            </Text>
-          </TouchableOpacity>
+        {/* Header */}
+        <View style={s.header}>
+          <Text style={s.tagline}>JOIN THE COLLECTIVE</Text>
+          <Text style={s.heading}>Create Account</Text>
+          <Text style={s.subheading}>Create your architectural workspace and start managing your freedom.</Text>
+        </View>
 
-          <TouchableOpacity
-            style={[
-              styles.roleCard,
-              role === "client" && styles.roleCardActive,
-            ]}
-            onPress={() => setRole("client")}
-          >
-            <Ionicons
-              name="briefcase-outline"
-              size={20}
-              color={role === "client" ? "#FFF" : "#1A1C19"}
-            />
-            <Text
-              style={[
-                styles.roleCardText,
-                role === "client" && { color: "#FFF" },
-              ]}
-            >
-              CLIENT
-            </Text>
+        {/* Toggle */}
+        <View style={s.toggleRow}>
+          <TouchableOpacity style={s.toggleInactive} onPress={() => navigation.navigate("SignIn")}>
+            <Text style={s.toggleInactiveText}>SIGN IN</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.toggleActive}>
+            <Text style={s.toggleActiveText}>SIGN UP</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.form}>
-          <Text style={styles.inputLabel}>Full Name</Text>
-          <TextInput
-            placeholder="Ilyas Akande"
-            style={styles.input}
-            value={fullName}
-            onChangeText={setFullName}
-          />
-
-          <Text style={styles.inputLabel}>Business Name</Text>
-          <TextInput
-            placeholder="e.g. Ilyas Dev Solutions"
-            style={styles.input}
-            value={businessName}
-            onChangeText={setBusinessName}
-          />
-
-          <Text style={styles.inputLabel}>Email Address</Text>
-          <TextInput
-            placeholder="email@example.com"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-
-          <Text style={styles.inputLabel}>Password</Text>
-          <View style={styles.passwordWrapper}>
-            <TextInput
-              placeholder="••••••••"
-              style={styles.flexInput}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={20}
-                color="#6B7280"
-              />
-            </TouchableOpacity>
+        {/* Progress */}
+        <View style={s.progressRow}>
+          <View style={s.progressBg}>
+            <View style={[s.progressFill, { width: "25%" }]} />
           </View>
+          <Text style={s.progressLabel}>Step 1 of 4</Text>
+        </View>
 
-          <TouchableOpacity
-            onPress={() => setChecked(!checked)}
-            style={styles.checkboxContainer}
-          >
-            <View style={[styles.checkbox, checked && styles.checkboxActive]}>
-              {checked && <Ionicons name="checkmark" size={14} color="#fff" />}
-            </View>
-            <Text style={styles.checkboxText}>
-              I agree to the Terms & Conditions
-            </Text>
-          </TouchableOpacity>
+        {/* Error */}
+        {!!error && (
+          <View style={s.errorBox}>
+            <View style={s.errorDot} />
+            <Text style={s.errorText}>{error}</Text>
+          </View>
+        )}
 
-          <TouchableOpacity
-            onPress={handleSignUp}
-            style={styles.button}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>GET STARTED</Text>
-            )}
+        {/* Role selector */}
+        <Text style={s.label}>I WANT TO JOIN AS A:</Text>
+        <View style={s.roleRow}>
+          {[
+            { id: "freelancer", label: "FREELANCER", Icon: Hammer },
+            { id: "client",     label: "CLIENT",     Icon: Briefcase },
+          ].map(({ id, label, Icon }) => (
+            <TouchableOpacity
+              key={id}
+              style={[s.roleCard, role === id && s.roleCardActive]}
+              onPress={() => setRole(id)}
+              activeOpacity={0.8}
+            >
+              <Icon size={18} color={role === id ? C.secondaryContainer : C.onSurface} />
+              <Text style={[s.roleLabel, role === id && s.roleLabelActive]}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Fields */}
+        <Text style={s.label}>BUSINESS NAME</Text>
+        <TextInput style={s.input} placeholder="e.g. Studio Vertex" placeholderTextColor={C.outline}
+          value={businessName} onChangeText={setBusinessName} />
+
+        <Text style={s.label}>WORK EMAIL</Text>
+        <TextInput style={s.input} placeholder="architect@frelopro.com" placeholderTextColor={C.outline}
+          value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+
+        <Text style={s.label}>FULL NAME</Text>
+        <TextInput style={s.input} placeholder="e.g. Elena Vance" placeholderTextColor={C.outline}
+          value={fullName} onChangeText={setFullName} />
+
+        <Text style={s.label}>SECURITY KEY</Text>
+        <View style={s.inputWrap}>
+          <TextInput style={[s.input, { flex: 1, borderWidth: 0, marginTop: 0 }]}
+            placeholder="Minimum 6 characters" placeholderTextColor={C.outline}
+            value={password} onChangeText={setPassword} secureTextEntry={!showPwd} />
+          <TouchableOpacity onPress={() => setShowPwd(v => !v)} style={{ paddingRight: 4 }}>
+            {showPwd ? <EyeOff size={17} color={C.outline} /> : <Eye size={17} color={C.outline} />}
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          onPress={() => navigation.navigate("SignIn")}
-          style={styles.footer}
-        >
-          <Text style={styles.footerText}>
-            ALREADY HAVE AN ACCOUNT?{" "}
-            <Text style={styles.signInLink}>LOG IN</Text>
+        {/* Terms */}
+        <TouchableOpacity style={s.checkRow} onPress={() => setChecked(v => !v)} activeOpacity={0.7}>
+          <View style={[s.checkbox, checked && s.checkboxActive]}>
+            {checked && <Check size={12} color="#fff" />}
+          </View>
+          <Text style={s.checkLabel}>I agree to the Terms & Conditions</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={s.primaryBtn} onPress={handleSignUp} disabled={loading} activeOpacity={0.85}>
+          {loading
+            ? <ActivityIndicator color="#fff" />
+            : <>
+                <Text style={s.primaryBtnText}>LAUNCH WORKSPACE</Text>
+                <ArrowRight size={18} color="#fff" />
+              </>}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={s.footer} onPress={() => navigation.navigate("SignIn")}>
+          <Text style={s.footerText}>
+            ALREADY HAVE AN ACCOUNT?{"  "}<Text style={s.footerAccent}>LOG IN</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -205,113 +144,52 @@ export default function SignUp({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 24, backgroundColor: "#FBFDF8", flexGrow: 1 },
-  header: { marginTop: 40, marginBottom: 30 },
-  tagline: {
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
-    color: "#6B7280",
-  },
-  heading: {
-    fontSize: 32,
-    fontWeight: "900",
-    color: "#1A1C19",
-    letterSpacing: -1,
-  },
+const s = StyleSheet.create({
+  container:  { flexGrow: 1, backgroundColor: C.background, padding: 28 },
 
-  roleContainer: { flexDirection: "row", gap: 12, marginBottom: 20 },
-  roleCard: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 20,
-    backgroundColor: "#FFF",
-    borderWidth: 1,
-    borderColor: "#F0F1EB",
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-  },
-  roleCardActive: { backgroundColor: "#1A1C19", borderColor: "#1A1C19" },
-  roleCardText: {
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 1,
-    color: "#1A1C19",
-  },
+  brand:      { marginTop: 48, marginBottom: 28 },
+  brandName:  { fontSize: 28, fontWeight: "900", color: C.primary, letterSpacing: -1 },
+  brandTag:   { fontSize: 9, fontWeight: "900", color: C.onSurfaceVar, letterSpacing: 2, marginTop: 2 },
 
-  form: { width: "100%" },
-  inputLabel: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: "#1A1C19",
-    marginBottom: 8,
-    letterSpacing: 1,
-    marginTop: 15,
-  },
-  input: {
-    backgroundColor: "#FFF",
-    borderRadius: 16,
-    height: 55,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: "#F0F1EB",
-    fontSize: 15,
-  },
+  header:     { marginBottom: 24 },
+  tagline:    { fontSize: 10, fontWeight: "900", letterSpacing: 2, color: C.onSurfaceVar, marginBottom: 6 },
+  heading:    { fontSize: 32, fontWeight: "900", color: C.primary, letterSpacing: -1, marginBottom: 8 },
+  subheading: { fontSize: 14, color: C.onSurfaceVar, lineHeight: 21 },
 
-  passwordWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 16,
-    height: 55,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: "#F0F1EB",
-  },
-  flexInput: { flex: 1, fontSize: 15 },
+  toggleRow:          { flexDirection: "row", backgroundColor: C.surfaceLow, borderRadius: 14, padding: 4, marginBottom: 20, gap: 4 },
+  toggleActive:       { flex: 1, backgroundColor: C.card, borderRadius: 10, paddingVertical: 10, alignItems: "center" },
+  toggleActiveText:   { fontSize: 10, fontWeight: "900", color: C.primary, letterSpacing: 1 },
+  toggleInactive:     { flex: 1, paddingVertical: 10, alignItems: "center" },
+  toggleInactiveText: { fontSize: 10, fontWeight: "900", color: C.outline, letterSpacing: 1 },
 
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 20,
-  },
-  checkbox: {
-    height: 20,
-    width: 20,
-    borderWidth: 2,
-    borderColor: "#1A1C19",
-    borderRadius: 6,
-    marginRight: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxActive: { backgroundColor: "#1A1C19" },
-  checkboxText: { fontSize: 13, color: "#6B7280" },
+  progressRow:  { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 20 },
+  progressBg:   { flex: 1, height: 5, backgroundColor: C.surfaceHigh, borderRadius: 3, overflow: "hidden" },
+  progressFill: { height: "100%", backgroundColor: C.secondaryContainer, borderRadius: 3 },
+  progressLabel:{ fontSize: 9, fontWeight: "900", color: C.onSurfaceVar, letterSpacing: 1 },
 
-  button: {
-    backgroundColor: "#1A1C19",
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 30,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "900",
-    letterSpacing: 2,
-  },
+  errorBox:  { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#FEF2F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#FECACA" },
+  errorDot:  { width: 8, height: 8, borderRadius: 4, backgroundColor: C.error },
+  errorText: { flex: 1, fontSize: 12, fontWeight: "700", color: C.error },
 
-  footer: { marginTop: 30, alignItems: "center" },
-  footerText: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: "#6B7280",
-    letterSpacing: 1,
-  },
-  signInLink: { color: "#1A1C19" },
+  label:    { fontSize: 9, fontWeight: "900", color: C.onSurface, letterSpacing: 1.5, marginBottom: 8, marginTop: 16 },
+  input:    { backgroundColor: C.card, borderRadius: 16, height: 54, paddingHorizontal: 18, borderWidth: 1, borderColor: C.outlineVar, fontSize: 14, fontWeight: "500", color: C.onSurface, marginTop: 0 },
+  inputWrap:{ flexDirection: "row", alignItems: "center", backgroundColor: C.card, borderRadius: 16, height: 54, paddingHorizontal: 18, borderWidth: 1, borderColor: C.outlineVar },
+
+  roleRow:       { flexDirection: "row", gap: 12, marginBottom: 4 },
+  roleCard:      { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, padding: 14, borderRadius: 18, backgroundColor: C.card, borderWidth: 1, borderColor: C.outlineVar },
+  roleCardActive:{ backgroundColor: C.primary, borderColor: C.primary },
+  roleLabel:     { fontSize: 10, fontWeight: "900", letterSpacing: 1, color: C.onSurface },
+  roleLabelActive:{ color: C.secondaryContainer },
+
+  checkRow:     { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 20 },
+  checkbox:     { width: 20, height: 20, borderRadius: 6, borderWidth: 2, borderColor: C.primary, alignItems: "center", justifyContent: "center" },
+  checkboxActive:{ backgroundColor: C.primary },
+  checkLabel:   { fontSize: 13, color: C.onSurfaceVar },
+
+  primaryBtn:     { backgroundColor: C.primary, height: 58, borderRadius: 29, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 28 },
+  primaryBtnText: { color: "#fff", fontSize: 13, fontWeight: "900", letterSpacing: 2 },
+
+  footer:      { marginTop: 28, marginBottom: 20, alignItems: "center" },
+  footerText:  { fontSize: 11, fontWeight: "900", color: C.onSurfaceVar, letterSpacing: 1 },
+  footerAccent:{ color: C.primary },
 });

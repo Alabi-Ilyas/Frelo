@@ -1,177 +1,216 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, View, FlatList, TouchableOpacity, ActivityIndicator, Text } from "react-native";
+import React, { useState, useCallback } from "react";
+import {
+  View, Text, FlatList, TouchableOpacity, StyleSheet,
+  ActivityIndicator, RefreshControl, Alert,
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
-import { getInvoices, getUnbilledTasks } from "../api/apiCalls"; 
+import { TrendingUp, CheckCircle, Clock, Eye, Plus } from "lucide-react-native";
+import { getInvoices, createInvoice, updateInvoiceStatus, getProjects } from "../api/apiCalls";
 import ScreenHeader from "./ScreenHeader";
-import CreateInvoiceModal from "../components/modals/CreateInvoiceModal";
-import InvoiceDetailsModal from "../components/modals/InvoiceDetailsModal"; // New details modal
+import CreateInvoiceModal from "./modals/CreateInvoiceModal";
+import InvoiceDetailModal from "./modals/InvoiceDetailModal";
 
-export default function InvoiceScreen({ navigation }) {
-  const [invoices, setInvoices] = useState([]);
-  const [summary, setSummary] = useState({ Paid: { total: 0 }, Unpaid: { total: 0 } });
-  const [pendingTasks, setPendingTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+const TABS = ["All", "Unpaid", "Paid", "Review"];
 
-  // Modal States
+const STATUS_CLASS = {
+  Paid:      { bg: "#F0FDF4", text: "#16A34A" },
+  Unpaid:    { bg: "#FFFBEB", text: "#D97706" },
+  Review:    { bg: "#FFF7ED", text: "#F97316" },
+  Cancelled: { bg: "#F9FAFB", text: "#9CA3AF" },
+};
+
+const fmt = (n) => `₦${Number(n || 0).toLocaleString()}`;
+
+export default function InvoiceScreen() {
+  const [invoices, setInvoices]   = useState([]);
+  const [summary, setSummary]     = useState({});
+  const [projects, setProjects]   = useState([]);
+  const [tab, setTab]             = useState("All");
+  const [loading, setLoading]     = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
-  const [detailsVisible, setDetailsVisible] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [detailInvoice, setDetailInvoice] = useState(null);
 
-  const loadData = async () => {
+  const load = async () => {
     try {
-      setLoading(true);
-      const [invRes, taskRes] = await Promise.all([getInvoices(), getUnbilledTasks()]);
-      
-      if (invRes.success) {
-        setInvoices(invRes.invoices);
-        setSummary(invRes.summary);
-      }
-      if (taskRes.success) setPendingTasks(taskRes.tasks);
-    } catch (err) {
-      console.error("Ledger load error:", err);
-    } finally {
-      setLoading(false);
-    }
+      const params = tab !== "All" ? { status: tab } : undefined;
+      const [invRes, projRes] = await Promise.all([getInvoices(params), getProjects()]);
+      if (invRes?.success) { setInvoices(invRes.invoices ?? []); setSummary(invRes.summary ?? {}); }
+      if (projRes?.success) setProjects(projRes.projects ?? []);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); setRefreshing(false); }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useFocusEffect(useCallback(() => { load(); }, [tab]));
 
-  const handleOpenDetails = (invoice) => {
-    setSelectedInvoice(invoice);
-    setDetailsVisible(true);
+  const handleMarkPaid = (inv) => {
+    Alert.alert("Mark as Paid", `Mark invoice ${inv.invoiceNumber} as paid?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Mark Paid",
+        onPress: async () => {
+          try { await updateInvoiceStatus(inv._id, "Paid", "Manual"); load(); }
+          catch (e) { Alert.alert("Error", "Could not update invoice."); }
+        },
+      },
+    ]);
   };
 
-  const handleGenerateInvoice = async (tasks) => {
-    // Logic to save invoice to backend would go here
-    setCreateVisible(false);
-    loadData(); // Refresh list
+  const handleCreate = async (data) => {
+    try {
+      const res = await createInvoice(data);
+      if (res?.success) { setCreateVisible(false); load(); }
+    } catch (e) { Alert.alert("Error", "Could not create invoice."); }
+  };
+
+  const stats = [
+    { label: "OUTSTANDING",  value: fmt(summary?.Unpaid?.total ?? 0),  icon: TrendingUp, color: "#EF4444" },
+    { label: "COLLECTED",    value: fmt(summary?.Paid?.total ?? 0),    icon: CheckCircle, color: "#16A34A" },
+    { label: "UNDER REVIEW", value: fmt(summary?.Review?.total ?? 0),  icon: Clock,       color: "#F97316" },
+  ];
+
+  const renderItem = ({ item }) => {
+    const cfg = STATUS_CLASS[item.status] ?? STATUS_CLASS.Cancelled;
+    const isPastDue = item.status === "Unpaid" && new Date(item.dueDate) < new Date();
+    return (
+      <TouchableOpacity style={s.card} onPress={() => setDetailInvoice(item)} activeOpacity={0.7}>
+        <View style={s.cardTop}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.invNum}>{item.invoiceNumber}</Text>
+            <Text style={s.invClient}>{item.clientId?.name ?? "Private Client"}</Text>
+            {item.projectId?.name && <Text style={s.invProject}>{item.projectId.name}</Text>}
+          </View>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={s.invAmount}>{fmt(item.amount)}</Text>
+            <View style={[s.badge, { backgroundColor: cfg.bg }]}>
+              <Text style={[s.badgeText, { color: cfg.text }]}>{item.status?.toUpperCase()}</Text>
+            </View>
+          </View>
+        </View>
+        <View style={s.cardBottom}>
+          <Text style={s.dateText}>
+            Issued: {new Date(item.issueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          </Text>
+          <Text style={[s.dateText, isPastDue && { color: "#EF4444" }]}>
+            Due: {new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          </Text>
+        </View>
+        <View style={s.cardActions}>
+          {item.status === "Unpaid" && (
+            <TouchableOpacity style={s.markPaidBtn} onPress={() => handleMarkPaid(item)}>
+              <Text style={s.markPaidText}>MARK PAID</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={s.viewBtn} onPress={() => setDetailInvoice(item)}>
+            <Eye size={16} color="#1A1C19" />
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   return (
-    <View style={styles.container}>
+    <View style={s.root}>
       <StatusBar style="dark" />
-      <ScreenHeader
-        title="Ledger"
-        tagline="FINANCIAL OVERVIEW"
-        onPressAdd={() => setCreateVisible(true)}
-      />
+      <ScreenHeader title="Invoices." tagline="FINANCIAL LEDGER" onPressAdd={() => setCreateVisible(true)} />
 
-      <View style={styles.financeSummary}>
-        <View style={styles.sumBox}>
-          <Text style={styles.sumLabel}>COLLECTED</Text>
-          <Text style={styles.sumAmount}>₦{summary.Paid?.total?.toLocaleString() || 0}</Text>
-        </View>
-        <View style={styles.vDivider} />
-        <View style={styles.sumBox}>
-          <Text style={styles.sumLabel}>PENDING</Text>
-          <Text style={[styles.sumAmount, { color: "#F59E0B" }]}>
-            ₦{summary.Unpaid?.total?.toLocaleString() || 0}
-          </Text>
+      {/* Stats */}
+      <View style={s.statsRow}>
+        {stats.map(({ label, value, icon: Icon, color }) => (
+          <View key={label} style={s.statBox}>
+            <Icon size={14} color={color} />
+            <Text style={[s.statValue, { color }]}>{value}</Text>
+            <Text style={s.statLabel}>{label}</Text>
+          </View>
+        ))}
+        <View style={[s.statBox, { backgroundColor: "#1A1C19", borderRadius: 12, padding: 8 }]}>
+          <Text style={[s.statValue, { color: "#FFF" }]}>{invoices.length}</Text>
+          <Text style={[s.statLabel, { color: "rgba(255,255,255,0.5)" }]}>TOTAL</Text>
         </View>
       </View>
 
+      {/* Tabs */}
+      <View style={s.tabRow}>
+        {TABS.map(t => (
+          <TouchableOpacity key={t} style={[s.tabBtn, tab === t && s.tabBtnActive]} onPress={() => setTab(t)}>
+            <Text style={[s.tabText, tab === t && s.tabTextActive]}>{t}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {loading ? (
-        <ActivityIndicator color="#1A1C19" style={{ marginTop: 40 }} />
+        <View style={s.center}><ActivityIndicator color="#1A1C19" /></View>
       ) : (
         <FlatList
           data={invoices}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.invoiceCard} onPress={() => handleOpenDetails(item)}>
-              <View style={styles.cardMain}>
-                <View>
-                  <Text style={styles.invoiceNumber}>#{item.invoiceNumber}</Text>
-                  <Text style={styles.clientName}>{item.clientId?.name || "Private Client"}</Text>
-                </View>
-                <View style={styles.amountContainer}>
-                  <Text style={styles.amountText}>₦{item.amount.toLocaleString()}</Text>
-                  <Text style={[styles.statusLabel, { color: item.status === "Paid" ? "#10B981" : "#F59E0B" }]}>
-                    {item.status.toUpperCase()}
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          )}
-          contentContainerStyle={styles.listContent}
+          keyExtractor={i => i._id}
+          renderItem={renderItem}
+          contentContainerStyle={s.list}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
+          ListEmptyComponent={
+            <View style={s.empty}>
+              <Text style={s.emptyText}>No invoices found.</Text>
+            </View>
+          }
         />
       )}
 
-      {/* MODALS */}
+      {/* FAB */}
+      <TouchableOpacity style={s.fab} onPress={() => setCreateVisible(true)}>
+        <Plus size={26} color="#FFF" />
+      </TouchableOpacity>
+
       <CreateInvoiceModal
         visible={createVisible}
-        pendingTasks={pendingTasks}
         onClose={() => setCreateVisible(false)}
-        onSave={handleGenerateInvoice}
+        onSave={handleCreate}
+        projects={projects}
       />
-
-      <InvoiceDetailsModal
-        visible={detailsVisible}
-        invoice={selectedInvoice}
-        onClose={() => setDetailsVisible(false)}
+      <InvoiceDetailModal
+        visible={!!detailInvoice}
+        invoice={detailInvoice}
+        onClose={() => setDetailInvoice(null)}
+        onMarkPaid={() => { handleMarkPaid(detailInvoice); setDetailInvoice(null); }}
       />
     </View>
   );
 }
 
+const s = StyleSheet.create({
+  root:   { flex: 1, backgroundColor: "#FBFDF8" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  list:   { paddingHorizontal: 16, paddingBottom: 100 },
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FBFDF8" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  financeSummary: {
-    flexDirection: "row",
-    backgroundColor: "#1A1C19",
-    marginHorizontal: 24,
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 24,
-  },
-  sumBox: { flex: 1, alignItems: "center" },
-  vDivider: {
-    width: 1,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    marginHorizontal: 10,
-  },
-  sumLabel: {
-    color: "#6B7280",
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 1,
-  },
-  sumAmount: { color: "#FFF", fontSize: 22, fontWeight: "900", marginTop: 4 },
-  listContent: { paddingHorizontal: 24 },
-  invoiceCard: {
-    backgroundColor: "#FFF",
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#F0F1EB",
-  },
-  cardMain: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  invoiceNumber: { fontSize: 12, fontWeight: "900", color: "#6B7280" },
-  clientName: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#1A1C19",
-    marginTop: 2,
-  },
-  amountContainer: { alignItems: "flex-end" },
-  amountText: { fontSize: 18, fontWeight: "900", color: "#1A1C19" },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 4,
-  },
-  statusLabel: { fontSize: 10, fontWeight: "900" },
-  empty: {
-    textAlign: "center",
-    marginTop: 40,
-    color: "#6B7280",
-    fontWeight: "600",
-  },
+  statsRow: { flexDirection: "row", paddingHorizontal: 12, paddingVertical: 12, backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#F0F1EB", gap: 4 },
+  statBox:  { flex: 1, alignItems: "center", gap: 3 },
+  statValue:{ fontSize: 12, fontWeight: "900", color: "#1A1C19" },
+  statLabel:{ fontSize: 7, fontWeight: "900", color: "#9CA3AF", letterSpacing: 0.5 },
+
+  tabRow:       { flexDirection: "row", backgroundColor: "#F3F4EF", paddingHorizontal: 8, paddingVertical: 6, gap: 4 },
+  tabBtn:       { flex: 1, paddingVertical: 7, alignItems: "center", borderRadius: 10 },
+  tabBtnActive: { backgroundColor: "#FFF" },
+  tabText:      { fontSize: 10, fontWeight: "900", color: "#9CA3AF" },
+  tabTextActive:{ color: "#1A1C19" },
+
+  card: { backgroundColor: "#FFF", borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#F0F1EB" },
+  cardTop:    { flexDirection: "row", marginBottom: 10 },
+  invNum:     { fontSize: 12, fontWeight: "900", color: "#9CA3AF" },
+  invClient:  { fontSize: 16, fontWeight: "700", color: "#1A1C19", marginTop: 2 },
+  invProject: { fontSize: 11, color: "#6B7280", marginTop: 2, fontStyle: "italic" },
+  invAmount:  { fontSize: 18, fontWeight: "900", color: "#1A1C19" },
+  badge:      { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginTop: 4 },
+  badgeText:  { fontSize: 9, fontWeight: "900" },
+  cardBottom: { flexDirection: "row", justifyContent: "space-between", paddingTop: 10, borderTopWidth: 1, borderTopColor: "#F9FAFB" },
+  dateText:   { fontSize: 11, fontWeight: "600", color: "#9CA3AF" },
+  cardActions:{ flexDirection: "row", justifyContent: "flex-end", gap: 8, marginTop: 10 },
+  markPaidBtn:{ borderWidth: 1, borderColor: "#426900", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  markPaidText:{ fontSize: 10, fontWeight: "900", color: "#426900" },
+  viewBtn:    { width: 34, height: 34, backgroundColor: "#F9FAFB", borderRadius: 10, justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#F0F1EB" },
+
+  fab: { position: "absolute", bottom: 30, right: 24, width: 60, height: 60, borderRadius: 20, backgroundColor: "#1A1C19", justifyContent: "center", alignItems: "center", elevation: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
+
+  empty:     { alignItems: "center", marginTop: 60, gap: 8 },
+  emptyText: { color: "#9CA3AF", fontWeight: "600" },
 });

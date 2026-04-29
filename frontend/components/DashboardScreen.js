@@ -1,296 +1,297 @@
 import React, { useState, useCallback } from "react";
 import {
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  ActivityIndicator,
-  RefreshControl, // Added for manual sync
+  ScrollView, View, Text, TouchableOpacity, StyleSheet,
+  ActivityIndicator, RefreshControl,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native"; // Added for auto-refresh
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import {
-  Sparkles,
-  Briefcase,
-  Zap,
-  Plus,
-  ChevronRight,
-  RefreshCcw,
+  Briefcase, DollarSign, CalendarDays, ListTodo,
+  Clock, AlertCircle, RefreshCcw,
 } from "lucide-react-native";
 import { useAuth } from "../components/context/AuthContext";
 import { getDashboardData } from "../api/apiCalls";
+import { C, shadow } from "../utils/theme";
+
+const fmt = (n) => `₦${Number(n || 0).toLocaleString()}`;
 
 export default function DashboardScreen({ navigation }) {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [data, setData]         = useState(null);
+  const [loading, setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError]       = useState(null);
 
-  // 1. Fetch Logic wrapped in useCallback
-  const fetchMyData = async () => {
+  const load = async () => {
     try {
+      setError(null);
       const res = await getDashboardData();
-      if (res.success) {
-        setData(res);
-      }
-    } catch (error) {
-      console.error("Dashboard fetch error:", error);
+      if (res.success) setData(res);
+    } catch (e) {
+      setError("Could not sync workspace.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  // 2. Refresh every time the screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      if (!authLoading) {
-        fetchMyData();
-      }
-    }, [authLoading, isAuthenticated]),
-  );
+  useFocusEffect(useCallback(() => { load(); }, []));
 
-  // 3. Manual Pull-to-Refresh logic
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchMyData();
-  };
-
-  if (authLoading || (loading && !data)) {
+  if (loading && !data) {
     return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1A1C19" />
-        <Text style={styles.loaderText}>SYNCING WORKSPACE...</Text>
+      <View style={s.center}>
+        <ActivityIndicator size="large" color={C.primary} />
+        <Text style={s.loaderText}>SYNCING WORKSPACE...</Text>
       </View>
     );
   }
 
+  if (error && !data) {
+    return (
+      <View style={s.center}>
+        <AlertCircle size={40} color={C.error} />
+        <Text style={s.errorText}>{error}</Text>
+        <TouchableOpacity style={s.retryBtn} onPress={load}>
+          <Text style={s.retryText}>RETRY</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const stats = data?.stats ?? {};
+  const upcoming48    = data?.upcoming48 ?? [];
+  const pendingTasks  = data?.pendingTasks ?? [];
+  const recentInvoices = data?.recentInvoices ?? [];
+
+  const statCards = [
+    { label: "ACTIVE PROJECTS",  value: String(stats.activeProjects ?? 0).padStart(2, "0"), sub: `${stats.totalProjects ?? 0} Total`,                                icon: Briefcase,     dark: false },
+    { label: "UNPAID INVOICES",  value: fmt(stats.unpaidTotal),                             sub: `${stats.unpaidCount ?? 0} Outstanding`,                          icon: DollarSign,    dark: true  },
+    { label: "UPCOMING (48H)",   value: String(stats.upcoming48Count ?? 0).padStart(2, "0"),sub: upcoming48[0] ? `Next: ${upcoming48[0].time}` : "Clear schedule", icon: CalendarDays,  dark: false },
+    { label: "PENDING TASKS",    value: String(stats.pendingTaskCount ?? 0).padStart(2, "0"),sub: stats.overdueTaskCount > 0 ? `${stats.overdueTaskCount} Overdue` : "All on track", icon: ListTodo, dark: false },
+  ];
+
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={s.root} edges={["top"]}>
       <StatusBar style="dark" />
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={s.container}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#1A1C19"
-          />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.primary} />}
       >
-        {/* HEADER SECTION */}
-        <View style={styles.header}>
+        {/* Header */}
+        <View style={s.header}>
           <View>
-            <Text style={styles.tagline}>THE VERDANT EDITION</Text>
-            <Text style={styles.greeting}>
-              Hello, {user?.name?.split(" ")[0] || "User"}
-            </Text>
+            <Text style={s.tagline}>ARCHITECTURAL WORKSPACE</Text>
+            <Text style={s.greeting}>Ready to build,{"\n"}{user?.name?.split(" ")[0] ?? "User"}.</Text>
           </View>
-          <TouchableOpacity
-            onPress={() => navigation.openDrawer()}
-            style={styles.profileCircle}
-          >
-            <Text style={styles.profileInitials}>{user?.name?.[0] || "U"}</Text>
+          <TouchableOpacity onPress={() => navigation.openDrawer()} style={s.avatar}>
+            <Text style={s.avatarText}>{user?.name?.[0] ?? "U"}</Text>
           </TouchableOpacity>
         </View>
 
-        {/* HERO STATS - Highlighting Live Counts */}
-        <View style={styles.heroGrid}>
-          <View style={[styles.statCard, styles.bgPrimary]}>
-            <Briefcase size={20} color="#fff" />
-            <Text style={styles.statNumber}>
-              {data?.stats?.activeProjects ?? 0}
-            </Text>
-            <Text style={styles.statLabel}>ACTIVE PROJECTS</Text>
-          </View>
-          <View style={[styles.statCard, styles.bgSecondary]}>
-            <Zap size={20} color="#000" />
-            <Text style={[styles.statNumber, { color: "#000" }]}>
-              {data?.stats?.pendingTaskCount ?? 0}
-            </Text>
-            <Text style={[styles.statLabel, { color: "#000" }]}>
-              URGENT TASKS
-            </Text>
-          </View>
+        {/* 4 Stat Cards */}
+        <View style={s.statsGrid}>
+          {statCards.map((card, i) => {
+            const Icon = card.icon;
+            return (
+              <View key={i} style={[s.statCard, card.dark && s.statCardDark, shadow]}>
+                <View style={[s.statIconBox, card.dark && s.statIconBoxDark]}>
+                  <Icon size={17} color={card.dark ? C.secondaryContainer : C.primary} />
+                </View>
+                <Text style={[s.statLabel, card.dark && s.statLabelDark]}>{card.label}</Text>
+                <Text style={[s.statValue, card.dark && s.statValueDark]} numberOfLines={1}>{card.value}</Text>
+                <Text style={[s.statSub, card.dark && s.statSubDark]}>{card.sub}</Text>
+              </View>
+            );
+          })}
         </View>
 
-        {/* PRIORITY WORKFLOW */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>PRIORITY WORKFLOW</Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Tasks")}>
-            <Text style={styles.viewAll}>VIEW ALL</Text>
-          </TouchableOpacity>
-        </View>
-
-        {data?.pendingTasks && data.pendingTasks.length > 0 ? (
-          data.pendingTasks.map((task) => (
-            <TouchableOpacity key={task._id} style={styles.itemCard}>
-              <View style={styles.iconBox}>
-                <Sparkles size={18} color="#6B7280" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.itemTitle} numberOfLines={1}>
-                  {task.text || task.title}
-                </Text>
-                <Text style={styles.itemSub}>
-                  {task.projectName || "Standard Infrastructure"}
-                </Text>
-              </View>
-              <ChevronRight size={16} color="#9CA3AF" />
+        {/* Upcoming Appointments */}
+        <View style={s.section}>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>UPCOMING APPOINTMENTS</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Calendar")}>
+              <Text style={s.sectionLink}>VIEW CALENDAR</Text>
             </TouchableOpacity>
-          ))
-        ) : (
-          <View style={styles.emptyState}>
-            <RefreshCcw size={24} color="#E2E3DD" />
-            <Text style={styles.emptyText}>No pending tasks found.</Text>
+          </View>
+          <View style={[s.card, shadow]}>
+            {upcoming48.length > 0 ? (
+              upcoming48.map((apt, i) => (
+                <View key={apt._id} style={[s.aptRow, i > 0 && s.aptRowBorder]}>
+                  <View style={s.aptAvatar}>
+                    <Text style={s.aptAvatarText}>
+                      {apt.clientId?.name?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() ?? "FP"}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.aptName}>{apt.clientId?.name ?? "Client"}</Text>
+                    <Text style={s.aptTitle} numberOfLines={1}>{apt.title}</Text>
+                  </View>
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text style={s.aptTime}>{apt.time}</Text>
+                    <Text style={s.aptType}>{apt.type ?? "Meeting"}</Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View style={s.empty}>
+                <CalendarDays size={28} color={C.outlineVar} />
+                <Text style={s.emptyText}>Clean 48 hours. Use your time wisely.</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Pending Tasks */}
+        <View style={s.section}>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>MY TO-DO LIST</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Tasks")}>
+              <Text style={s.sectionLink}>VIEW ALL</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={[s.card, shadow]}>
+            {pendingTasks.length > 0 ? (
+              pendingTasks.map((task, i) => {
+                const isOverdue = task.status === "Overdue";
+                return (
+                  <View key={task._id} style={[s.taskRow, i > 0 && s.taskRowBorder]}>
+                    <View style={[s.taskDot, isOverdue && s.taskDotOverdue]} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.taskText} numberOfLines={2}>{task.text}</Text>
+                      <View style={s.taskMeta}>
+                        <View style={s.taskProjectBadge}>
+                          <Text style={s.taskProjectText}>{task.projectName}</Text>
+                        </View>
+                        <View style={s.taskTimeBadge}>
+                          <Clock size={10} color={isOverdue ? C.error : C.outline} />
+                          <Text style={[s.taskTimeText, isOverdue && { color: C.error }]}>
+                            {task.due
+                              ? new Date(task.due).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                              : task.status}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                );
+              })
+            ) : (
+              <View style={s.empty}>
+                <RefreshCcw size={28} color={C.outlineVar} />
+                <Text style={s.emptyText}>All tasks cleared. Architecture is complete.</Text>
+              </View>
+            )}
+            <TouchableOpacity style={s.viewAllBtn} onPress={() => navigation.navigate("Projects")}>
+              <Text style={s.viewAllBtnText}>+ VIEW ALL PROJECTS & TASKS</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Recent Invoices */}
+        {recentInvoices.length > 0 && (
+          <View style={s.section}>
+            <View style={s.sectionHeader}>
+              <Text style={s.sectionTitle}>RECENT INVOICES</Text>
+              <TouchableOpacity onPress={() => navigation.navigate("Invoices")}>
+                <Text style={s.sectionLink}>VIEW ALL</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={[s.card, shadow]}>
+              {recentInvoices.map((inv, i) => (
+                <View key={inv._id} style={[s.invRow, i > 0 && s.invRowBorder]}>
+                  <View style={s.invAvatar}>
+                    <Text style={s.invAvatarText}>
+                      {inv.clientId?.name?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() ?? "??"}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.invClient}>{inv.clientId?.name ?? "Unknown"}</Text>
+                    <Text style={s.invNum}>{inv.invoiceNumber}</Text>
+                  </View>
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text style={s.invAmount}>{fmt(inv.amount)}</Text>
+                    <Text style={[s.invStatus, { color: inv.status === "Paid" ? C.success : inv.status === "Overdue" ? C.error : C.yellow }]}>
+                      {inv.status?.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
           </View>
         )}
-
-        {/* FAB for Project Creation */}
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() => navigation.navigate("Projects")}
-        >
-          <Plus color="#fff" size={24} />
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#FBFDF8" },
-  container: { padding: 24, paddingBottom: 100 },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FBFDF8",
-  },
-  loaderText: {
-    marginTop: 12,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
-    color: "#1A1C19",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 32,
-  },
-  tagline: {
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
-    color: "#6B7280",
-    marginBottom: 4,
-  },
-  greeting: {
-    fontSize: 32,
-    fontWeight: "900",
-    letterSpacing: -1,
-    color: "#1A1C19",
-  },
-  profileCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#E2E3DD",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.05)",
-  },
-  profileInitials: { fontWeight: "bold", color: "#1A1C19" },
-  heroGrid: { flexDirection: "row", gap: 12, marginBottom: 32 },
-  statCard: {
-    flex: 1,
-    padding: 24,
-    borderRadius: 32,
-    justifyContent: "space-between",
-    height: 160,
-  },
-  bgPrimary: { backgroundColor: "#1A1C19" },
-  bgSecondary: { backgroundColor: "#D7E8CD" },
-  statNumber: {
-    fontSize: 42,
-    fontWeight: "900",
-    color: "#fff",
-    letterSpacing: -2,
-  },
-  statLabel: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: "#A0A29C",
-    letterSpacing: 1,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.5,
-    color: "#1A1C19",
-  },
-  viewAll: { fontSize: 10, fontWeight: "bold", color: "#6B7280" },
-  itemCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#F0F1EB",
-  },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "#F3F4EF",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 16,
-  },
-  itemTitle: { fontSize: 16, fontWeight: "700", color: "#1A1C19" },
-  itemSub: { fontSize: 12, color: "#6B7280", marginTop: 2 },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 40,
-    opacity: 0.5,
-  },
-  emptyText: {
-    textAlign: "center",
-    color: "#6B7280",
-    marginTop: 12,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  fab: {
-    position: "absolute",
-    bottom: 30,
-    right: 30,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#1A1C19",
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-  },
+const s = StyleSheet.create({
+  root:       { flex: 1, backgroundColor: C.background },
+  center:     { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: C.background, gap: 12 },
+  loaderText: { fontSize: 10, fontWeight: "900", letterSpacing: 2, color: C.primary, marginTop: 8 },
+  errorText:  { fontSize: 14, fontWeight: "700", color: C.error, textAlign: "center", marginHorizontal: 32, marginTop: 8 },
+  retryBtn:   { marginTop: 16, backgroundColor: C.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 },
+  retryText:  { color: "#fff", fontWeight: "900", fontSize: 11, letterSpacing: 2 },
+
+  container:  { padding: 20, paddingBottom: 100 },
+
+  header:     { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 },
+  tagline:    { fontSize: 10, fontWeight: "900", letterSpacing: 2.5, color: C.secondary, marginBottom: 4 },
+  greeting:   { fontSize: 32, fontWeight: "900", letterSpacing: -1, color: C.primary, lineHeight: 38 },
+  avatar:     { width: 48, height: 48, borderRadius: 24, backgroundColor: C.primary, alignItems: "center", justifyContent: "center" },
+  avatarText: { color: "#fff", fontWeight: "900", fontSize: 18 },
+
+  statsGrid:  { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 24 },
+  statCard:   { width: "47.5%", backgroundColor: C.card, borderRadius: 24, padding: 18, borderWidth: 1, borderColor: C.outlineVar, minHeight: 160, justifyContent: "space-between" },
+  statCardDark: { backgroundColor: C.primary, borderColor: C.primary },
+  statIconBox:  { width: 38, height: 38, borderRadius: 12, backgroundColor: C.surfaceLow, alignItems: "center", justifyContent: "center", marginBottom: 10 },
+  statIconBoxDark: { backgroundColor: "rgba(255,255,255,0.08)" },
+  statLabel:  { fontSize: 9, fontWeight: "900", color: C.onSurfaceVar, letterSpacing: 1.2 },
+  statLabelDark: { color: "rgba(255,255,255,0.4)" },
+  statValue:  { fontSize: 26, fontWeight: "900", color: C.primary, letterSpacing: -1, marginTop: 6 },
+  statValueDark: { color: "#fff" },
+  statSub:    { fontSize: 10, fontWeight: "700", color: C.outline },
+  statSubDark: { color: C.secondaryContainer },
+
+  section:      { marginBottom: 20 },
+  sectionHeader:{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
+  sectionTitle: { fontSize: 10, fontWeight: "900", letterSpacing: 1.8, color: C.primary },
+  sectionLink:  { fontSize: 10, fontWeight: "700", color: C.secondary },
+
+  card: { backgroundColor: C.card, borderRadius: 20, borderWidth: 1, borderColor: C.outlineVar, overflow: "hidden" },
+
+  aptRow:       { flexDirection: "row", alignItems: "center", padding: 14, gap: 12 },
+  aptRowBorder: { borderTopWidth: 1, borderTopColor: C.surfaceLow },
+  aptAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: C.primary, alignItems: "center", justifyContent: "center" },
+  aptAvatarText:{ color: "#fff", fontWeight: "900", fontSize: 13 },
+  aptName:      { fontSize: 14, fontWeight: "700", color: C.onSurface },
+  aptTitle:     { fontSize: 11, color: C.onSurfaceVar, marginTop: 2 },
+  aptTime:      { fontSize: 13, fontWeight: "700", color: C.primary },
+  aptType:      { fontSize: 9, fontWeight: "900", color: C.outline, letterSpacing: 1 },
+
+  taskRow:      { flexDirection: "row", alignItems: "flex-start", padding: 14, gap: 12 },
+  taskRowBorder:{ borderTopWidth: 1, borderTopColor: C.surfaceLow },
+  taskDot:      { width: 8, height: 8, borderRadius: 4, backgroundColor: C.primary, marginTop: 6 },
+  taskDotOverdue: { backgroundColor: C.error },
+  taskText:     { fontSize: 13, fontWeight: "700", color: C.onSurface, lineHeight: 18 },
+  taskMeta:     { flexDirection: "row", gap: 8, marginTop: 6, flexWrap: "wrap" },
+  taskProjectBadge: { backgroundColor: C.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  taskProjectText:  { color: "#fff", fontSize: 9, fontWeight: "900" },
+  taskTimeBadge:    { flexDirection: "row", alignItems: "center", gap: 4 },
+  taskTimeText:     { fontSize: 10, fontWeight: "700", color: C.outline },
+  viewAllBtn:   { padding: 14, alignItems: "center", borderTopWidth: 1, borderTopColor: C.surfaceLow },
+  viewAllBtnText: { fontSize: 10, fontWeight: "900", color: C.primary, letterSpacing: 1.5 },
+
+  invRow:       { flexDirection: "row", alignItems: "center", padding: 14, gap: 12 },
+  invRowBorder: { borderTopWidth: 1, borderTopColor: C.surfaceLow },
+  invAvatar:    { width: 36, height: 36, borderRadius: 10, backgroundColor: C.surfaceLow, alignItems: "center", justifyContent: "center" },
+  invAvatarText:{ fontSize: 12, fontWeight: "900", color: C.primary },
+  invClient:    { fontSize: 13, fontWeight: "700", color: C.onSurface },
+  invNum:       { fontSize: 10, fontWeight: "700", color: C.outline, marginTop: 2 },
+  invAmount:    { fontSize: 14, fontWeight: "900", color: C.primary },
+  invStatus:    { fontSize: 9, fontWeight: "900", letterSpacing: 1, marginTop: 2 },
+
+  empty:        { alignItems: "center", padding: 32, gap: 8 },
+  emptyText:    { fontSize: 11, fontWeight: "600", color: C.outline, textAlign: "center" },
 });

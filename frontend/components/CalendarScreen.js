@@ -1,275 +1,212 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
+  View, Text, FlatList, TouchableOpacity, StyleSheet,
+  ActivityIndicator, RefreshControl, Linking, Alert,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import {
-  Calendar as CalendarIcon,
-  Video,
-  MapPin,
-  MoreHorizontal,
-  Plus,
-  Clock,
+  Calendar as CalendarIcon, Video, MapPin, Clock,
+  Plus, CheckCircle2, XCircle, Loader2,
 } from "lucide-react-native";
-import { getUpcomingAppointments } from "../api/apiCalls";
+import { getAppointments, cancelAppointment, completeAppointment, createAppointment, getClients } from "../api/apiCalls";
 import ScreenHeader from "./ScreenHeader";
+import AppointmentDetailModal from "./modals/AppointmentDetailsModal";
+import CreateAppointmentModal from "./modals/CreateAppointmentModal";
 
-// MODALS
-import AppointmentDetailsModal from "../components/modals/AppointmentDetailsModal";
-import CreateAppointmentModal from "../components/modals/CreateAppointmentModal";
+const STATUS_STYLE = {
+  Confirmed: { bg: "#F0FDF4", text: "#16A34A" },
+  Pending:   { bg: "#FFFBEB", text: "#D97706" },
+  Cancelled: { bg: "#FEF2F2", text: "#EF4444" },
+  Completed: { bg: "#F9FAFB", text: "#6B7280" },
+  "No-show": { bg: "#FEF2F2", text: "#F87171" },
+};
 
-export default function CalendarScreen({ navigation }) {
+function fmt12(time) {
+  const [h, m] = time.split(":").map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+}
+
+export default function CalendarScreen() {
   const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // MODAL STATES
-  const [selectedAppt, setSelectedAppt] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
-
-  useEffect(() => {
-    load();
-  }, []);
+  const [clients, setClients]           = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [refreshing, setRefreshing]     = useState(false);
+  const [selected, setSelected]         = useState(null);
+  const [showCreate, setShowCreate]     = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const load = async () => {
     try {
-      setLoading(true);
-      const res = await getUpcomingAppointments();
-      if (res.success) setAppointments(res.appointments);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      const [aptRes, cRes] = await Promise.all([getAppointments(), getClients()]);
+      if (aptRes?.success) setAppointments(aptRes.appointments ?? []);
+      if (cRes?.success)   setClients(cRes.clients ?? []);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); setRefreshing(false); }
   };
 
-  // OPEN DETAILS
-  const handleOpenDetails = (appt) => {
-    setSelectedAppt(appt);
-    setShowDetails(true);
+  useFocusEffect(useCallback(() => { load(); }, []));
+
+  const handleCancel = async (apt) => {
+    Alert.alert("Cancel Appointment", "Cancel this appointment?", [
+      { text: "Keep", style: "cancel" },
+      {
+        text: "Cancel It", style: "destructive",
+        onPress: async () => {
+          try {
+            setActionLoading(true);
+            await cancelAppointment(apt._id);
+            setSelected(null);
+            load();
+          } catch (e) { Alert.alert("Error", "Could not cancel."); }
+          finally { setActionLoading(false); }
+        },
+      },
+    ]);
   };
 
-  // SAVE NEW APPOINTMENT (Triggered from Create Modal)
-  const handleSaveAppointment = (newAppt) => {
-    // Add to local state immediately so UI updates
-    setAppointments([newAppt, ...appointments]);
-    setShowCreate(false);
+  const handleComplete = async (apt, status) => {
+    try {
+      setActionLoading(true);
+      await completeAppointment(apt._id, status);
+      setSelected(null);
+      load();
+    } catch (e) { Alert.alert("Error", "Could not update appointment."); }
+    finally { setActionLoading(false); }
   };
 
-  const renderAppointment = ({ item }) => {
+  const handleCreate = async (data) => {
+    try {
+      await createAppointment(data);
+      setShowCreate(false);
+      load();
+    } catch (e) { Alert.alert("Error", "Could not create appointment."); }
+  };
+
+  const renderItem = ({ item }) => {
     const isOnline = !!item.meetingLink;
-
+    const cfg = STATUS_STYLE[item.status] ?? STATUS_STYLE.Pending;
     return (
-      <TouchableOpacity
-        style={styles.apptCard}
-        onPress={() => handleOpenDetails(item)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.cardMain}>
-          <View style={styles.timeSection}>
-            <Text style={styles.timeText}>{item.time}</Text>
-            <View style={styles.durationTag}>
+      <TouchableOpacity style={s.card} onPress={() => setSelected(item)} activeOpacity={0.7}>
+        <View style={s.cardMain}>
+          {/* Time */}
+          <View style={s.timeSection}>
+            <Text style={s.timeText}>{fmt12(item.time)}</Text>
+            <View style={s.durationTag}>
               <Clock size={10} color="#9CA3AF" />
-              <Text style={styles.durationText}>{item.duration}m</Text>
+              <Text style={s.durationText}>{item.duration}m</Text>
             </View>
           </View>
 
-          <View style={styles.divider} />
+          <View style={s.divider} />
 
-          <View style={styles.contentSection}>
-            <Text style={styles.apptTitle} numberOfLines={1}>
-              {item.title.toUpperCase()}
+          {/* Content */}
+          <View style={{ flex: 1 }}>
+            <Text style={s.apptTitle} numberOfLines={1}>{item.title.toUpperCase()}</Text>
+            <Text style={s.clientLabel}>
+              CLIENT: <Text style={s.clientName}>{item.clientId?.name?.toUpperCase() ?? "EXTERNAL"}</Text>
             </Text>
-            <Text style={styles.clientLabel}>
-              CLIENT:{" "}
-              <Text style={styles.clientName}>
-                {item.clientId?.name?.toUpperCase() || "EXTERNAL"}
-              </Text>
-            </Text>
-
-            <View style={styles.metaRow}>
-              <View
-                style={[
-                  styles.typeBadge,
-                  isOnline ? styles.onlineBg : styles.offlineBg,
-                ]}
-              >
-                {isOnline ? (
-                  <Video size={12} color="#10B981" />
-                ) : (
-                  <MapPin size={12} color="#6B7280" />
-                )}
-                <Text
-                  style={[
-                    styles.typeText,
-                    isOnline ? styles.onlineText : styles.offlineText,
-                  ]}
-                >
+            <View style={s.metaRow}>
+              <View style={[s.typeBadge, isOnline ? s.onlineBg : s.offlineBg]}>
+                {isOnline
+                  ? <Video size={11} color="#16A34A" />
+                  : <MapPin size={11} color="#6B7280" />}
+                <Text style={[s.typeText, isOnline ? s.onlineText : s.offlineText]}>
                   {isOnline ? "VIRTUAL" : "IN-PERSON"}
                 </Text>
               </View>
+              <View style={[s.statusBadge, { backgroundColor: cfg.bg }]}>
+                <Text style={[s.statusText, { color: cfg.text }]}>{item.status}</Text>
+              </View>
             </View>
           </View>
-          <MoreHorizontal size={20} color="#D1D5DB" />
         </View>
       </TouchableOpacity>
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator color="#1A1C19" size="large" />
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
+    <View style={s.root}>
       <StatusBar style="dark" />
-      <ScreenHeader
-        title="Schedule."
-        tagline="TIME MANAGEMENT"
-        onPressAdd={() => setShowCreate(true)} // LINKED TO CREATE MODAL
-      />
+      <ScreenHeader title="Schedule." tagline="TIME MANAGEMENT" onPressAdd={() => setShowCreate(true)} />
 
-      <FlatList
-        data={appointments}
-        keyExtractor={(item) => item._id}
-        renderItem={renderAppointment}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <View style={styles.listHeader}>
-            <Text style={styles.sectionTitle}>UPCOMING EVENTS</Text>
-          </View>
-        }
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={styles.emptyIconCircle}>
-              <CalendarIcon size={32} color="#9CA3AF" />
+      {loading ? (
+        <View style={s.center}><ActivityIndicator color="#1A1C19" /></View>
+      ) : (
+        <FlatList
+          data={appointments}
+          keyExtractor={i => i._id}
+          renderItem={renderItem}
+          contentContainerStyle={s.list}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
+          ListHeaderComponent={
+            <Text style={s.listHeader}>UPCOMING EVENTS</Text>
+          }
+          ListEmptyComponent={
+            <View style={s.empty}>
+              <View style={s.emptyIcon}>
+                <CalendarIcon size={32} color="#9CA3AF" />
+              </View>
+              <Text style={s.emptyText}>YOUR SCHEDULE IS CLEAR.</Text>
+              <TouchableOpacity style={s.emptyBtn} onPress={() => setShowCreate(true)}>
+                <Plus size={16} color="#FFF" />
+                <Text style={s.emptyBtnText}>BOOK NOW</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.emptyText}>YOUR SCHEDULE IS CLEAR.</Text>
-            <TouchableOpacity
-              style={styles.emptyBtn}
-              onPress={() => setShowCreate(true)} // LINKED TO CREATE MODAL
-            >
-              <Plus size={16} color="#FFF" />
-              <Text style={styles.emptyBtnText}>BOOK NOW</Text>
-            </TouchableOpacity>
-          </View>
-        }
+          }
+        />
+      )}
+
+      {/* Appointment Detail Modal with cancel/complete/join */}
+      <AppointmentDetailModal
+        visible={!!selected}
+        appointment={selected}
+        actionLoading={actionLoading}
+        onClose={() => setSelected(null)}
+        onCancel={() => handleCancel(selected)}
+        onComplete={(status) => handleComplete(selected, status)}
       />
 
-      {/* 1. THE DETAILS MODAL */}
-      <AppointmentDetailsModal
-        visible={showDetails}
-        appointment={selectedAppt}
-        onClose={() => setShowDetails(false)}
-      />
-
-      {/* 2. THE CREATE MODAL */}
       <CreateAppointmentModal
         visible={showCreate}
         onClose={() => setShowCreate(false)}
-        onSave={handleSaveAppointment}
+        onSave={handleCreate}
+        clients={clients}
       />
     </View>
   );
 }
 
-// ... styles remain the same as your previous design ...
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FBFDF8" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  listContent: { paddingHorizontal: 24, paddingBottom: 100 },
-  listHeader: { marginTop: 20, marginBottom: 24 },
-  sectionTitle: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: "#9CA3AF",
-    letterSpacing: 2,
-  },
-  apptCard: {
-    backgroundColor: "#FFF",
-    borderRadius: 28,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#F0F1EB",
-  },
-  cardMain: { flexDirection: "row", padding: 20, alignItems: "center" },
-  timeSection: { width: 70, alignItems: "center" },
-  timeText: { fontSize: 16, fontWeight: "900", color: "#1A1C19" },
-  durationTag: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 4,
-  },
-  durationText: { fontSize: 10, fontWeight: "800", color: "#9CA3AF" },
-  divider: {
-    width: 1,
-    height: 50,
-    backgroundColor: "#F0F1EB",
-    marginHorizontal: 15,
-  },
-  contentSection: { flex: 1 },
-  apptTitle: { fontSize: 15, fontWeight: "900", color: "#1A1C19" },
-  clientLabel: {
-    fontSize: 9,
-    fontWeight: "800",
-    color: "#9CA3AF",
-    marginTop: 4,
-  },
-  clientName: { color: "#1A1C19" },
-  metaRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
-  typeBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  onlineBg: { backgroundColor: "#ECFDF5" },
-  offlineBg: { backgroundColor: "#F3F4F6" },
-  typeText: { fontSize: 9, fontWeight: "900" },
-  onlineText: { color: "#10B981" },
+const s = StyleSheet.create({
+  root:   { flex: 1, backgroundColor: "#FBFDF8" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  list:   { paddingHorizontal: 16, paddingBottom: 100 },
+  listHeader: { fontSize: 10, fontWeight: "900", color: "#9CA3AF", letterSpacing: 2, marginTop: 16, marginBottom: 16 },
+
+  card:     { backgroundColor: "#FFF", borderRadius: 24, marginBottom: 14, borderWidth: 1, borderColor: "#F0F1EB" },
+  cardMain: { flexDirection: "row", padding: 18, alignItems: "center" },
+  timeSection: { width: 68, alignItems: "center" },
+  timeText:    { fontSize: 15, fontWeight: "900", color: "#1A1C19" },
+  durationTag: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 4 },
+  durationText:{ fontSize: 10, fontWeight: "800", color: "#9CA3AF" },
+  divider:     { width: 1, height: 50, backgroundColor: "#F0F1EB", marginHorizontal: 14 },
+  apptTitle:   { fontSize: 14, fontWeight: "900", color: "#1A1C19" },
+  clientLabel: { fontSize: 9, fontWeight: "800", color: "#9CA3AF", marginTop: 4 },
+  clientName:  { color: "#1A1C19" },
+  metaRow:     { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10 },
+  typeBadge:   { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  onlineBg:    { backgroundColor: "#ECFDF5" },
+  offlineBg:   { backgroundColor: "#F3F4F6" },
+  typeText:    { fontSize: 9, fontWeight: "900" },
+  onlineText:  { color: "#16A34A" },
   offlineText: { color: "#6B7280" },
-  empty: { alignItems: "center", marginTop: 80 },
-  emptyIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 30,
-    backgroundColor: "#F0F1EB",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  emptyText: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: "#9CA3AF",
-    letterSpacing: 1.5,
-    marginBottom: 24,
-  },
-  emptyBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "#1A1C19",
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 16,
-  },
-  emptyBtnText: {
-    color: "#FFF",
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 1,
-  },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  statusText:  { fontSize: 9, fontWeight: "900" },
+
+  empty:       { alignItems: "center", marginTop: 80, gap: 16 },
+  emptyIcon:   { width: 80, height: 80, borderRadius: 28, backgroundColor: "#F0F1EB", justifyContent: "center", alignItems: "center" },
+  emptyText:   { fontSize: 11, fontWeight: "900", color: "#9CA3AF", letterSpacing: 1.5 },
+  emptyBtn:    { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#1A1C19", paddingHorizontal: 24, paddingVertical: 14, borderRadius: 14 },
+  emptyBtnText:{ color: "#FFF", fontSize: 10, fontWeight: "900", letterSpacing: 1 },
 });

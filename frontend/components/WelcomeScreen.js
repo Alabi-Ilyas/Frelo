@@ -1,195 +1,95 @@
-import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  TouchableOpacity,
-  Animated,
-  Dimensions,
+  StyleSheet, Text, View, Image,
+  TouchableOpacity, Animated,
 } from "react-native";
-import { useFonts } from "expo-font";
+import { StatusBar } from "expo-status-bar";
 import { ArrowRight } from "lucide-react-native";
-
-const { width } = Dimensions.get("window");
+import { C } from "../utils/theme";
 
 export default function Welcome({ navigation }) {
-  const [fontsLoaded] = useFonts({
-    "Outfit-Regular": require("../assets/fonts/Outfit-Regular.ttf"),
-    "Outfit-SemiBold": require("../assets/fonts/Outfit-SemiBold.ttf"),
-  });
-
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const fade  = useRef(new Animated.Value(0)).current;
+  const slide = useRef(new Animated.Value(24)).current;
 
   useEffect(() => {
-    if (fontsLoaded) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) return null;
+    Animated.parallel([
+      Animated.timing(fade,  { toValue: 1, duration: 900, useNativeDriver: true }),
+      Animated.timing(slide, { toValue: 0, duration: 900, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={s.root}>
       <StatusBar style="dark" />
 
-      {/* Decorative Branding */}
-      <View style={styles.topAccent} />
+      {/* Decorative lime accent blob */}
+      <View style={s.blob} />
 
-      <Animated.View
-        style={[
-          styles.content,
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-        ]}
-      >
-        {/* Simplified Logo Area */}
-        <View style={styles.logoContainer}>
-          <Image
-            source={require("./../assets/images/logo.png")}
-            style={styles.image}
-            resizeMode="contain"
-          />
+      <Animated.View style={[s.content, { opacity: fade, transform: [{ translateY: slide }] }]}>
+
+        {/* Logo mark */}
+        <View style={s.logoRow}>
+          <View style={s.logoMark}>
+            <Image
+              source={require("./../assets/images/logo.png")}
+              style={s.logoImg}
+              resizeMode="contain"
+            />
+          </View>
         </View>
 
-        {/* Text Area - Editorial Style */}
-        <View style={styles.textContainer}>
-          <Text style={styles.tagline}>VERDANT EDITION • v1.0.4</Text>
-          <Text style={styles.heading}>Infrastructure for Modern Work</Text>
-          <Text style={styles.body}>
-            A unified ecosystem for freelancers and clients to build, manage,
-            and scale projects.
+        {/* Editorial text */}
+        <View style={s.textBlock}>
+          <Text style={s.tagline}>VERDANT EDITION  •  v1.0.4</Text>
+          <Text style={s.heading}>Infrastructure{"\n"}for Modern Work</Text>
+          <Text style={s.body}>
+            A unified ecosystem for freelancers and clients to build, manage, and scale projects.
           </Text>
         </View>
 
-        {/* Action Buttons */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.getStartedBtn}
-            onPress={() => navigation.navigate("SignUp")}
-          >
-            <Text style={styles.getStartedText}>GET STARTED</Text>
-            <ArrowRight size={18} color="#FFF" />
+        {/* Actions */}
+        <View style={s.actions}>
+          <TouchableOpacity style={s.primaryBtn} onPress={() => navigation.navigate("SignUp")} activeOpacity={0.85}>
+            <Text style={s.primaryBtnText}>GET STARTED</Text>
+            <ArrowRight size={18} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.signInBtn}
-            onPress={() => navigation.navigate("SignIn")}
-          >
-            <Text style={styles.signInText}>
-              ALREADY REGISTERED? <Text style={styles.signInLink}>LOG IN</Text>
+          <TouchableOpacity style={s.ghostBtn} onPress={() => navigation.navigate("SignIn")} activeOpacity={0.7}>
+            <Text style={s.ghostBtnText}>
+              ALREADY REGISTERED?{"  "}
+              <Text style={s.ghostBtnAccent}>LOG IN</Text>
             </Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
+
+      {/* Footer */}
+      <Text style={s.footer}>© {new Date().getFullYear()} FreloPro Verdant Systems</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FBFDF8", // Recessed Sage/White
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-  topAccent: {
-    position: "absolute",
-    top: -100,
-    left: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: "#D7E8CD", // Very soft sage green
-    opacity: 0.3,
-    zIndex: -1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "flex-start", // Left-aligned for a modern architect feel
-  },
-  logoContainer: {
-    marginBottom: 40,
-  },
-  image: {
-    width: 80, // Smaller, more professional logo size
-    height: 80,
-  },
-  textContainer: {
-    marginBottom: 60,
-  },
-  tagline: {
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
-    color: "#6B7280",
-    marginBottom: 12,
-  },
-  heading: {
-    fontSize: 42,
-    fontWeight: "900",
-    color: "#1A1C19",
-    lineHeight: 48,
-    letterSpacing: -1.5,
-  },
-  body: {
-    fontSize: 16,
-    color: "#6B7280",
-    marginTop: 20,
-    lineHeight: 24,
-    maxWidth: "90%",
-  },
-  buttonContainer: {
-    width: "100%",
-  },
-  getStartedBtn: {
-    backgroundColor: "#1A1C19",
-    width: "100%",
-    height: 64,
-    borderRadius: 32,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  getStartedText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "900",
-    letterSpacing: 2,
-  },
-  signInBtn: {
-    marginTop: 30,
-    alignItems: "center",
-    width: "100%",
-  },
-  signInText: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: "#6B7280",
-    letterSpacing: 1,
-  },
-  signInLink: {
-    color: "#1A1C19",
-  },
+const s = StyleSheet.create({
+  root:    { flex: 1, backgroundColor: C.background, paddingHorizontal: 28, paddingTop: 64, paddingBottom: 36 },
+  blob:    { position: "absolute", top: -80, left: -80, width: 280, height: 280, borderRadius: 140, backgroundColor: C.secondaryContainer, opacity: 0.18 },
+  content: { flex: 1, justifyContent: "center" },
+
+  logoRow:  { marginBottom: 44 },
+  logoMark: { width: 56, height: 56, borderRadius: 16, backgroundColor: C.primary, alignItems: "center", justifyContent: "center" },
+  logoImg:  { width: 36, height: 36, tintColor: C.secondaryContainer },
+
+  textBlock: { marginBottom: 56 },
+  tagline:   { fontSize: 10, fontWeight: "900", letterSpacing: 2.5, color: C.onSurfaceVar, marginBottom: 14 },
+  heading:   { fontSize: 44, fontWeight: "900", color: C.primary, lineHeight: 50, letterSpacing: -1.5, marginBottom: 20 },
+  body:      { fontSize: 16, color: C.onSurfaceVar, lineHeight: 26, maxWidth: "88%" },
+
+  actions:       { width: "100%" },
+  primaryBtn:    { backgroundColor: C.primary, height: 64, borderRadius: 32, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 },
+  primaryBtnText:{ color: "#fff", fontSize: 13, fontWeight: "900", letterSpacing: 2.5 },
+
+  ghostBtn:      { marginTop: 28, alignItems: "center" },
+  ghostBtnText:  { fontSize: 11, fontWeight: "900", color: C.onSurfaceVar, letterSpacing: 1 },
+  ghostBtnAccent:{ color: C.primary },
+
+  footer: { textAlign: "center", fontSize: 9, fontWeight: "700", color: C.outline, letterSpacing: 1 },
 });

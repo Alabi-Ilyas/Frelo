@@ -1,140 +1,115 @@
 import React, { useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  StyleSheet, Text, View, TextInput, TouchableOpacity,
+  Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { useAuth } from "../components/context/AuthContext"; // Import your central auth logic
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react-native";
+import { useAuth } from "../components/context/AuthContext";
 import { loginUser } from "../api/apiCalls";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react-native";
+import { C } from "../utils/theme";
 
 export default function SignIn({ navigation }) {
-  const { login } = useAuth(); // Use the login function from context
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuth();
+  const [email, setEmail]           = useState("");
+  const [password, setPassword]     = useState("");
+  const [loading, setLoading]       = useState(false);
+  const [showPwd, setShowPwd]       = useState(false);
+  const [error, setError]           = useState("");
 
   const handleSignIn = async () => {
-    // Trim email to avoid hidden space validation errors on backend
     const cleanEmail = email.trim();
-
-    if (!cleanEmail || !password) {
-      return Alert.alert("Required", "Email and password are required.");
-    }
-
-    setLoading(true);
+    if (!cleanEmail || !password) return setError("Email and password are required.");
+    setLoading(true); setError("");
     try {
-      // 1. Match your backend's POST /api/auth/login { email, password }
       const res = await loginUser({ email: cleanEmail, password });
-
-      // 2. Your backend sends "success: true" on status 200
-      if (res && res.success) {
-        // 3. IMPORTANT: Match backend keys: res.accessToken and res.refreshToken
-        // Do NOT use snake_case here.
-        await login(res.user, res.accessToken, res.refreshToken);
-
-        // Success! App.js will now auto-switch to MainApp.
-      }
+      if (res?.success) await login(res.user, res.accessToken, res.refreshToken);
     } catch (err) {
-      // Extracting the error from your R.unauthorized or R.serverError utilities
-      const errorMsg =
-        err.response?.data?.message || "Check your network connection";
-
-      Alert.alert("Login Failed", errorMsg);
-      console.log("Full Backend Error:", err.response?.data);
-    } finally {
-      setLoading(false);
-    }
+      setError(err.response?.data?.message || "Check your network connection.");
+    } finally { setLoading(false); }
   };
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-    >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         <StatusBar style="dark" />
 
-        <View style={styles.header}>
-          <Text style={styles.tagline}>CONTINUE YOUR JOURNEY</Text>
-          <Text style={styles.heading}>Welcome Back</Text>
-          <Text style={styles.subheading}>
-            Enter your credentials to access your portal
-          </Text>
+        {/* Brand */}
+        <View style={s.brand}>
+          <Text style={s.brandName}>FreloPro</Text>
+          <Text style={s.brandTag}>VERDANT EDITION</Text>
         </View>
 
-        <View style={styles.form}>
-          <Text style={styles.inputLabel}>EMAIL ADDRESS</Text>
-          <View style={styles.inputWrapper}>
-            <Mail size={18} color="#6B7280" style={styles.icon} />
+        {/* Header */}
+        <View style={s.header}>
+          <Text style={s.tagline}>CONTINUE YOUR JOURNEY</Text>
+          <Text style={s.heading}>Welcome back</Text>
+          <Text style={s.subheading}>Enter your credentials to access your architectural workspace.</Text>
+        </View>
+
+        {/* Toggle pills */}
+        <View style={s.toggleRow}>
+          <TouchableOpacity style={s.toggleActive}>
+            <Text style={s.toggleActiveText}>SIGN IN</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.toggleInactive} onPress={() => navigation.navigate("SignUp")}>
+            <Text style={s.toggleInactiveText}>SIGN UP</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Error */}
+        {!!error && (
+          <View style={s.errorBox}>
+            <View style={s.errorDot} />
+            <Text style={s.errorText}>{error}</Text>
+          </View>
+        )}
+
+        {/* Form */}
+        <View style={s.form}>
+          <Text style={s.label}>WORK EMAIL</Text>
+          <View style={s.inputWrap}>
+            <Mail size={17} color={C.outline} />
             <TextInput
-              placeholder="email@example.com"
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
+              style={s.input} placeholder="architect@frelopro.com"
+              placeholderTextColor={C.outline} value={email}
+              onChangeText={v => { setEmail(v); setError(""); }}
+              autoCapitalize="none" keyboardType="email-address"
             />
           </View>
 
-          <Text style={styles.inputLabel}>PASSWORD</Text>
-          <View style={styles.inputWrapper}>
-            <Lock size={18} color="#6B7280" style={styles.icon} />
+          <View style={s.pwdHeader}>
+            <Text style={s.label}>PASSWORD</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
+              <Text style={s.recovery}>RECOVERY</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={s.inputWrap}>
+            <Lock size={17} color={C.outline} />
             <TextInput
-              placeholder="••••••••"
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
+              style={s.input} placeholder="••••••••••••"
+              placeholderTextColor={C.outline} value={password}
+              onChangeText={v => { setPassword(v); setError(""); }}
+              secureTextEntry={!showPwd}
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              {showPassword ? (
-                <EyeOff size={18} color="#6B7280" />
-              ) : (
-                <Eye size={18} color="#6B7280" />
-              )}
+            <TouchableOpacity onPress={() => setShowPwd(v => !v)}>
+              {showPwd ? <EyeOff size={17} color={C.outline} /> : <Eye size={17} color={C.outline} />}
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate("ForgotPassword")}
-            style={styles.forgotBtn}
-          >
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleSignIn}
-            style={styles.button}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>SIGN IN</Text>
-            )}
+          <TouchableOpacity style={s.primaryBtn} onPress={handleSignIn} disabled={loading} activeOpacity={0.85}>
+            {loading
+              ? <ActivityIndicator color="#fff" />
+              : <>
+                  <Text style={s.primaryBtnText}>ACCESS DASHBOARD</Text>
+                  <ArrowRight size={18} color="#fff" />
+                </>}
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          onPress={() => navigation.navigate("SignUp")}
-          style={styles.footer}
-        >
-          <Text style={styles.footerText}>
-            NEW TO FRELOPRO?{" "}
-            <Text style={styles.signUpLink}>CREATE ACCOUNT</Text>
+        <TouchableOpacity style={s.footer} onPress={() => navigation.navigate("SignUp")}>
+          <Text style={s.footerText}>
+            NEW TO FRELOPRO?{"  "}<Text style={s.footerAccent}>CREATE ACCOUNT</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -142,96 +117,39 @@ export default function SignIn({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: "#FBFDF8",
-    padding: 24,
-    justifyContent: "center",
-  },
-  header: { marginBottom: 40 },
-  tagline: {
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 2,
-    color: "#6B7280",
-    marginBottom: 4,
-  },
-  heading: {
-    fontSize: 32,
-    fontWeight: "900",
-    color: "#1A1C19",
-    letterSpacing: -1,
-  },
-  subheading: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginTop: 8,
-    lineHeight: 20,
-  },
-  form: { width: "100%" },
-  inputLabel: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: "#1A1C19",
-    marginBottom: 8,
-    letterSpacing: 1,
-    marginTop: 20,
-  },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 16,
-    height: 56,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: "#F0F1EB",
-  },
-  icon: { marginRight: 12 },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: "#1A1C19",
-    fontWeight: "500",
-  },
-  forgotBtn: {
-    alignSelf: "flex-end",
-    marginTop: 12,
-    marginBottom: 30,
-  },
-  forgotText: {
-    color: "#1A1C19",
-    fontWeight: "700",
-    fontSize: 12,
-  },
-  button: {
-    backgroundColor: "#1A1C19",
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "900",
-    letterSpacing: 2,
-  },
-  footer: {
-    marginTop: 40,
-    alignItems: "center",
-  },
-  footerText: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: "#6B7280",
-    letterSpacing: 1,
-  },
-  signUpLink: { color: "#1A1C19" },
+const s = StyleSheet.create({
+  container:  { flexGrow: 1, backgroundColor: C.background, padding: 28, justifyContent: "center" },
+
+  brand:      { marginBottom: 36 },
+  brandName:  { fontSize: 28, fontWeight: "900", color: C.primary, letterSpacing: -1 },
+  brandTag:   { fontSize: 9, fontWeight: "900", color: C.onSurfaceVar, letterSpacing: 2, marginTop: 2 },
+
+  header:     { marginBottom: 28 },
+  tagline:    { fontSize: 10, fontWeight: "900", letterSpacing: 2, color: C.onSurfaceVar, marginBottom: 6 },
+  heading:    { fontSize: 36, fontWeight: "900", color: C.primary, letterSpacing: -1, marginBottom: 8 },
+  subheading: { fontSize: 14, color: C.onSurfaceVar, lineHeight: 21 },
+
+  toggleRow:          { flexDirection: "row", backgroundColor: C.surfaceLow, borderRadius: 14, padding: 4, marginBottom: 24, gap: 4 },
+  toggleActive:       { flex: 1, backgroundColor: C.card, borderRadius: 10, paddingVertical: 10, alignItems: "center" },
+  toggleActiveText:   { fontSize: 10, fontWeight: "900", color: C.primary, letterSpacing: 1 },
+  toggleInactive:     { flex: 1, paddingVertical: 10, alignItems: "center" },
+  toggleInactiveText: { fontSize: 10, fontWeight: "900", color: C.outline, letterSpacing: 1 },
+
+  errorBox:  { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#FEF2F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#FECACA" },
+  errorDot:  { width: 8, height: 8, borderRadius: 4, backgroundColor: C.error },
+  errorText: { flex: 1, fontSize: 12, fontWeight: "700", color: C.error },
+
+  form:      { width: "100%" },
+  label:     { fontSize: 9, fontWeight: "900", color: C.onSurface, letterSpacing: 1.5, marginBottom: 8, marginTop: 20 },
+  pwdHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 20, marginBottom: 8 },
+  recovery:  { fontSize: 9, fontWeight: "900", color: C.primary, letterSpacing: 1 },
+  inputWrap: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: C.card, borderRadius: 16, height: 56, paddingHorizontal: 16, borderWidth: 1, borderColor: C.outlineVar },
+  input:     { flex: 1, fontSize: 15, color: C.onSurface, fontWeight: "500" },
+
+  primaryBtn:     { backgroundColor: C.primary, height: 58, borderRadius: 29, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 32 },
+  primaryBtnText: { color: "#fff", fontSize: 13, fontWeight: "900", letterSpacing: 2 },
+
+  footer:      { marginTop: 36, alignItems: "center" },
+  footerText:  { fontSize: 11, fontWeight: "900", color: C.onSurfaceVar, letterSpacing: 1 },
+  footerAccent:{ color: C.primary },
 });

@@ -1,197 +1,158 @@
 import React, { useState } from "react";
 import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Platform,
+  Modal, View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ScrollView, Platform, KeyboardAvoidingView,
 } from "react-native";
-import {
-  X,
-  Calendar as CalIcon,
-  Clock,
-  User,
-  AlignLeft,
-  Sparkles,
-} from "lucide-react-native";
+import { X, AlignLeft, User, Calendar, Clock, Link2, ChevronDown } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-export default function CreateAppointmentModal({ visible, onClose, onSave }) {
-  const [title, setTitle] = useState("");
-  const [clientName, setClientName] = useState("");
-  const [date, setDate] = useState(new Date());
-  const [showPicker, setShowPicker] = useState(false);
+export default function CreateAppointmentModal({ visible, onClose, onSave, clients = [] }) {
+  const [title, setTitle]           = useState("");
+  const [clientId, setClientId]     = useState("");
+  const [date, setDate]             = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [meetingLink, setMeetingLink] = useState("");
+  const [notes, setNotes]           = useState("");
+  const [duration, setDuration]     = useState("30");
+  const [showClientPicker, setShowClientPicker] = useState(false);
+
+  const selectedClient = clients.find(c => c._id === clientId);
 
   const handleSave = () => {
-    if (!title || !clientName) return;
+    if (!title.trim()) return alert("Title is required.");
+    if (!clientId)     return alert("Please select a client.");
 
-    const payload = {
-      title: title.trim(),
-      clientName: clientName.trim(),
-      date: date.toISOString(),
-      time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      duration: 30, // Default duration
-    };
+    const dateStr = [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0"),
+    ].join("-");
 
-    onSave(payload);
-    // Reset fields
-    setTitle("");
-    setClientName("");
-    onClose();
+    const timeStr = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+
+    onSave({
+      clientId,
+      title:       title.trim(),
+      date:        dateStr,
+      time:        timeStr,
+      duration:    parseInt(duration, 10) || 30,
+      meetingLink: meetingLink.trim() || undefined,
+      notes:       notes.trim() || undefined,
+    });
+
+    setTitle(""); setClientId(""); setMeetingLink(""); setNotes(""); setDuration("30");
   };
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.overlay}>
-        <View style={styles.card}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>BOOKING.</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={s.overlay}>
+        <View style={s.card}>
+          <View style={s.header}>
+            <Text style={s.headerTitle}>BOOKING.</Text>
+            <TouchableOpacity onPress={onClose} style={s.closeBtn}>
               <X size={20} color="#1A1C19" />
             </TouchableOpacity>
           </View>
 
-          <ScrollView>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>EVENT TITLE</Text>
-              <View style={styles.inputWrapper}>
-                <AlignLeft size={18} color="#9CA3AF" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. Project Discovery"
-                  value={title}
-                  onChangeText={setTitle}
-                />
-              </View>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            {/* Title */}
+            <Text style={s.label}>EVENT TITLE *</Text>
+            <View style={s.inputRow}>
+              <AlignLeft size={16} color="#9CA3AF" />
+              <TextInput style={s.input} placeholder="e.g. Project Discovery" value={title} onChangeText={setTitle} />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>CLIENT NAME</Text>
-              <View style={styles.inputWrapper}>
-                <User size={18} color="#9CA3AF" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Who are you meeting?"
-                  value={clientName}
-                  onChangeText={setClientName}
-                />
+            {/* Client selector */}
+            <Text style={s.label}>CLIENT *</Text>
+            <TouchableOpacity style={s.inputRow} onPress={() => setShowClientPicker(!showClientPicker)}>
+              <User size={16} color={clientId ? "#426900" : "#9CA3AF"} />
+              <Text style={[s.input, { color: clientId ? "#1A1C19" : "#9CA3AF" }]}>
+                {selectedClient?.name ?? "Select a client"}
+              </Text>
+              <ChevronDown size={16} color="#9CA3AF" />
+            </TouchableOpacity>
+            {showClientPicker && (
+              <View style={s.dropdown}>
+                {clients.map(c => (
+                  <TouchableOpacity
+                    key={c._id}
+                    style={s.dropdownItem}
+                    onPress={() => { setClientId(c._id); setShowClientPicker(false); }}
+                  >
+                    <Text style={[s.dropdownText, clientId === c._id && { color: "#426900", fontWeight: "900" }]}>
+                      {c.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            </View>
+            )}
 
-            <TouchableOpacity
-              style={styles.dateTrigger}
-              onPress={() => setShowPicker(true)}
-            >
-              <CalIcon size={18} color="#10B981" />
-              <Text style={styles.dateText}>
-                {date.toDateString()} at{" "}
-                {date.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+            {/* Date & Time */}
+            <Text style={s.label}>DATE & TIME</Text>
+            <TouchableOpacity style={s.inputRow} onPress={() => setShowDatePicker(true)}>
+              <Calendar size={16} color="#9CA3AF" />
+              <Text style={s.input}>
+                {date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                {" at "}
+                {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </Text>
             </TouchableOpacity>
-
-            {showPicker && (
+            {showDatePicker && (
               <DateTimePicker
                 value={date}
                 mode="datetime"
                 display="default"
-                onChange={(e, d) => {
-                  setShowPicker(false);
-                  if (d) setDate(d);
-                }}
+                minimumDate={new Date()}
+                onChange={(e, d) => { setShowDatePicker(false); if (d) setDate(d); }}
               />
             )}
 
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-              <Sparkles size={18} color="#FFF" />
-              <Text style={styles.saveBtnText}>CONFIRM BOOKING</Text>
+            {/* Duration */}
+            <Text style={s.label}>DURATION (MINUTES)</Text>
+            <View style={s.inputRow}>
+              <Clock size={16} color="#9CA3AF" />
+              <TextInput style={s.input} value={duration} onChangeText={setDuration} keyboardType="numeric" placeholder="30" />
+            </View>
+
+            {/* Meeting link */}
+            <Text style={s.label}>MEETING LINK (OPTIONAL)</Text>
+            <View style={s.inputRow}>
+              <Link2 size={16} color="#9CA3AF" />
+              <TextInput style={s.input} value={meetingLink} onChangeText={setMeetingLink} placeholder="https://meet.google.com/..." autoCapitalize="none" />
+            </View>
+
+            {/* Notes */}
+            <Text style={s.label}>NOTES (OPTIONAL)</Text>
+            <TextInput
+              style={[s.inputRow, { height: 80, alignItems: "flex-start", paddingTop: 12 }]}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Agenda or notes..."
+              multiline
+            />
+
+            <TouchableOpacity style={s.saveBtn} onPress={handleSave}>
+              <Text style={s.saveBtnText}>CONFIRM BOOKING</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(26,28,25,0.6)",
-    justifyContent: "flex-end",
-  },
-  card: {
-    backgroundColor: "#FBFDF8",
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    padding: 32,
-    maxHeight: "80%",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  headerTitle: { fontSize: 22, fontWeight: "900", color: "#1A1C19" },
-  closeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "#F0F1EB",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  inputGroup: { marginBottom: 20 },
-  label: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: "#9CA3AF",
-    letterSpacing: 1.5,
-    marginBottom: 8,
-  },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F0F1EB",
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 16,
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#1A1C19",
-  },
-  dateTrigger: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: "#F0F1EB",
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 32,
-  },
-  dateText: { fontSize: 13, fontWeight: "800", color: "#1A1C19" },
-  saveBtn: {
-    backgroundColor: "#1A1C19",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    borderRadius: 20,
-    gap: 12,
-  },
-  saveBtnText: {
-    color: "#FFF",
-    fontWeight: "900",
-    fontSize: 12,
-    letterSpacing: 1,
-  },
+const s = StyleSheet.create({
+  overlay:    { flex: 1, backgroundColor: "rgba(26,28,25,0.6)", justifyContent: "flex-end" },
+  card:       { backgroundColor: "#FBFDF8", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: "90%" },
+  header:     { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  headerTitle:{ fontSize: 22, fontWeight: "900", color: "#1A1C19" },
+  closeBtn:   { width: 40, height: 40, borderRadius: 12, backgroundColor: "#F0F1EB", justifyContent: "center", alignItems: "center" },
+  label:      { fontSize: 9, fontWeight: "900", color: "#9CA3AF", letterSpacing: 1.5, marginBottom: 8, marginTop: 16 },
+  inputRow:   { flexDirection: "row", alignItems: "center", backgroundColor: "#F0F1EB", borderRadius: 14, paddingHorizontal: 14, gap: 10, minHeight: 50 },
+  input:      { flex: 1, paddingVertical: 14, fontSize: 14, fontWeight: "700", color: "#1A1C19" },
+  dropdown:   { backgroundColor: "#FFF", borderRadius: 14, marginTop: 6, borderWidth: 1, borderColor: "#F0F1EB", overflow: "hidden" },
+  dropdownItem: { padding: 14, borderBottomWidth: 1, borderBottomColor: "#F9FAFB" },
+  dropdownText: { fontSize: 14, fontWeight: "700", color: "#1A1C19" },
+  saveBtn:    { backgroundColor: "#1A1C19", height: 56, borderRadius: 18, justifyContent: "center", alignItems: "center", marginTop: 24, marginBottom: 20 },
+  saveBtnText:{ color: "#FFF", fontWeight: "900", fontSize: 13, letterSpacing: 1 },
 });

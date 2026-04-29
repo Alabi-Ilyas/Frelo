@@ -65,12 +65,17 @@ export default function CreateInvoiceModal({
 
   const handleSave = () => {
     if (!selectedProject) return;
+    if (!dueDate.trim()) return alert("Due date is required (YYYY-MM-DD).");
+    const items = lineItems.map(i => ({
+      desc: i.description,
+      qty:  Number(i.quantity),
+      rate: Number(i.rate),
+    }));
     onSave({
       projectId: selectedProject._id,
-      clientId: selectedProject.clientId?._id,
-      items: lineItems,
-      tax,
-      total,
+      clientId:  selectedProject.clientId?._id,
+      items,
+      tax:     Number(tax),
       dueDate,
       notes,
     });
@@ -240,6 +245,26 @@ export default function CreateInvoiceModal({
                 <Plus size={16} color="#10B981" />
                 <Text style={styles.addBtnText}>ADD NEW ITEM</Text>
               </TouchableOpacity>
+
+              <Text style={[styles.sectionTitle, { marginTop: 24 }]}>DUE DATE (STEP 03)</Text>
+              <TextInput
+                style={styles.dueDateInput}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#9CA3AF"
+                value={dueDate}
+                onChangeText={setDueDate}
+                keyboardType="numbers-and-punctuation"
+              />
+
+              <Text style={[styles.sectionTitle, { marginTop: 16 }]}>TAX % (OPTIONAL)</Text>
+              <TextInput
+                style={styles.dueDateInput}
+                placeholder="0"
+                placeholderTextColor="#9CA3AF"
+                value={String(tax)}
+                onChangeText={v => setTax(Number(v) || 0)}
+                keyboardType="numeric"
+              />
             </ScrollView>
 
             <View style={styles.footer}>
@@ -384,6 +409,18 @@ const styles = StyleSheet.create({
   trash: { marginLeft: 15, padding: 5 },
   addBtn: { flexDirection: "row", alignItems: "center", gap: 6, padding: 10 },
   addBtnText: { fontSize: 10, fontWeight: "900", color: "#10B981" },
+  dueDateInput: {
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#1A1C19",
+    borderWidth: 1,
+    borderColor: "#F0F1EB",
+    marginBottom: 4,
+  },
   footer: {
     borderTopWidth: 1,
     borderTopColor: "#F0F1EB",

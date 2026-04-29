@@ -1,113 +1,33 @@
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
-import { useFonts } from "expo-font";
-import { UserAPI } from "../api/apiCalls";
+import { ArrowLeft } from "lucide-react-native";
 
+// Password changes for authenticated users are handled in SettingsScreen.
+// This screen is kept for navigation compatibility but redirects to SignIn.
 export default function ChangePassword({ navigation }) {
-  const [fontsLoaded] = useFonts({
-    "Outfit-Regular": require("../assets/fonts/Outfit-Regular.ttf"),
-    "Outfit-SemiBold": require("../assets/fonts/Outfit-SemiBold.ttf"),
-  });
-
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  if (!fontsLoaded) return null;
-
-  const handleChangePassword = async () => {
-    if (!password || !confirmPassword)
-      return Alert.alert("Missing Info", "Both fields are required.");
-    if (password !== confirmPassword)
-      return Alert.alert("Mismatch", "Passwords do not match.");
-
-    setLoading(true);
-    try {
-      await UserAPI.changePassword({ password, confirmPassword });
-      Alert.alert("Success", "Password changed successfully!");
-      navigation.navigate("SignIn");
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-      Alert.alert(
-        "Error",
-        err.response?.data?.message || "Something went wrong!",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
-      <Text style={styles.heading}>Change Password</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-      />
-
-      <TouchableOpacity
-        onPress={handleChangePassword}
-        style={styles.button}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Confirm</Text>
-        )}
+    <View style={s.container}>
+      <StatusBar style="dark" />
+      <TouchableOpacity style={s.backBtn} onPress={() => navigation.navigate("SignIn")}>
+        <ArrowLeft size={20} color="#1A1C19" />
+      </TouchableOpacity>
+      <Text style={s.heading}>Change Password</Text>
+      <Text style={s.body}>
+        To change your password, please sign in first and use the Settings screen.
+      </Text>
+      <TouchableOpacity style={s.button} onPress={() => navigation.navigate("SignIn")}>
+        <Text style={s.buttonText}>GO TO SIGN IN</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "center",
-    backgroundColor: "#fff",
-  },
-  heading: {
-    fontSize: 28,
-    fontFamily: "Outfit-SemiBold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#000",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-  button: {
-    backgroundColor: "#0A2166",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  buttonText: { color: "#fff", fontFamily: "Outfit-SemiBold", fontSize: 16 },
+const s = StyleSheet.create({
+  container: { flex: 1, padding: 24, justifyContent: "center", backgroundColor: "#FBFDF8" },
+  backBtn:   { width: 44, height: 44, borderRadius: 12, backgroundColor: "#F3F4EF", justifyContent: "center", alignItems: "center", marginBottom: 32 },
+  heading:   { fontSize: 28, fontWeight: "900", color: "#1A1C19", letterSpacing: -1, marginBottom: 12 },
+  body:      { fontSize: 15, color: "#6B7280", lineHeight: 22, marginBottom: 32 },
+  button:    { backgroundColor: "#1A1C19", height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
+  buttonText:{ color: "#fff", fontSize: 14, fontWeight: "900", letterSpacing: 2 },
 });

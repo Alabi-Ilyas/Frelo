@@ -20,14 +20,6 @@ import {
   Briefcase,
 } from "lucide-react-native";
 
-const PROJECT_TYPES = [
-  "Web App",
-  "Mobile App",
-  "Backend API",
-  "UI/UX Design",
-  "Consultation",
-];
-
 export default function CreateProjectModal({
   visible,
   onClose,
@@ -36,14 +28,13 @@ export default function CreateProjectModal({
 }) {
   const [form, setForm] = useState({
     name: "",
+    description: "",
     budget: "",
     clientId: "",
     deadline: "",
-    type: "Web App", // Default type
   });
 
   const [showClientPicker, setShowClientPicker] = useState(false);
-  const [showTypePicker, setShowTypePicker] = useState(false);
 
   const handleSave = () => {
     if (!form.name.trim() || !form.clientId) {
@@ -52,20 +43,16 @@ export default function CreateProjectModal({
     }
 
     const payload = {
-      ...form,
-      name: form.name.trim(),
-      budget: form.budget ? parseFloat(form.budget) : 0,
-      status: "In Progress",
+      name:        form.name.trim(),
+      description: form.description.trim() || undefined,
+      budget:      form.budget ? parseFloat(form.budget) : 0,
+      clientId:    form.clientId,
+      deadline:    form.deadline || undefined,
+      status:      "In Progress",
     };
 
     onSave(payload);
-    setForm({
-      name: "",
-      budget: "",
-      clientId: "",
-      deadline: "",
-      type: "Web App",
-    });
+    setForm({ name: "", description: "", budget: "", clientId: "", deadline: "" });
     onClose();
   };
 
@@ -103,7 +90,20 @@ export default function CreateProjectModal({
               </View>
             </View>
 
-            {/* 2. CLIENT & TYPE ROW */}
+            {/* 1b. DESCRIPTION */}
+            <View style={styles.inputLabelGroup}>
+              <Text style={styles.inputLabel}>DESCRIPTION (OPTIONAL)</Text>
+              <TextInput
+                style={[styles.mainInput, { fontSize: 14, minHeight: 60 }]}
+                placeholder="Brief project description..."
+                placeholderTextColor="#9CA3AF"
+                value={form.description}
+                onChangeText={(v) => setForm({ ...form, description: v })}
+                multiline
+              />
+            </View>
+
+            {/* 2. CLIENT ROW */}
             <View style={styles.row}>
               <View style={styles.flex1}>
                 <Text style={styles.inputLabel}>CLIENT</Text>
@@ -112,10 +112,7 @@ export default function CreateProjectModal({
                     styles.selectorChip,
                     form.clientId && styles.activeChip,
                   ]}
-                  onPress={() => {
-                    setShowClientPicker(!showClientPicker);
-                    setShowTypePicker(false);
-                  }}
+                  onPress={() => setShowClientPicker(!showClientPicker)}
                 >
                   <User
                     size={16}
@@ -128,17 +125,16 @@ export default function CreateProjectModal({
               </View>
 
               <View style={styles.flex1}>
-                <Text style={styles.inputLabel}>PROJECT TYPE</Text>
-                <TouchableOpacity
-                  style={styles.selectorChip}
-                  onPress={() => {
-                    setShowTypePicker(!showTypePicker);
-                    setShowClientPicker(false);
-                  }}
-                >
+                <Text style={styles.inputLabel}>CURRENCY</Text>
+                <View style={styles.selectorChip}>
                   <Briefcase size={16} color="#6B7280" />
-                  <Text style={styles.selectorText}>{form.type}</Text>
-                </TouchableOpacity>
+                  <TextInput
+                    style={[styles.selectorText, { flex: 1 }]}
+                    placeholder="NGN"
+                    value={form.currency}
+                    onChangeText={(v) => setForm({ ...form, currency: v })}
+                  />
+                </View>
               </View>
             </View>
 
@@ -163,23 +159,7 @@ export default function CreateProjectModal({
               </View>
             )}
 
-            {showTypePicker && (
-              <View style={styles.pickerDropdown}>
-                {PROJECT_TYPES.map((t) => (
-                  <TouchableOpacity
-                    key={t}
-                    style={styles.pickerItem}
-                    onPress={() => {
-                      setForm({ ...form, type: t });
-                      setShowTypePicker(false);
-                    }}
-                  >
-                    <Text style={styles.pickerItemText}>{t}</Text>
-                    {form.type === t && <Check size={16} color="#10B981" />}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+
 
             {/* 3. BUDGET & DEADLINE ROW */}
             <View style={styles.row}>

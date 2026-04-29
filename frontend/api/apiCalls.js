@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://192.168.100.25:5001/api",
+  baseURL: "http://172.20.10.3:5001/api",
   timeout: 10000,
 });
 
@@ -13,66 +13,117 @@ export const setAuthToken = (token) => {
   }
 };
 
-/* =======================
-    AUTH & PROFILE
-======================= */
-export const registerUser = (data) => API.post("/auth/register", data).then(res => res.data);
-export const loginUser = (data) => API.post("/auth/login", data).then(res => res.data);
-export const getProfile = () => API.get("/users/profile").then(res => res.data);
-export const updateProfile = (data) => API.patch("/users/profile", data).then(res => res.data);
-export const updateSettings = (data) => API.patch("/users/preferences", data).then(res => res.data);
+/* ── AUTH ─────────────────────────────────────────────────────────────── */
+export const registerUser = (data) =>
+  API.post("/auth/register", data).then((r) => r.data);
+export const loginUser = (data) =>
+  API.post("/auth/login", data).then((r) => r.data);
+export const changePassword = (data) =>
+  API.post("/auth/change-password", data).then((r) => r.data);
 
-/* =======================
-    DASHBOARD & NOTIFICATIONS
-======================= */
-export const getDashboardData = () => API.get("/dashboard/freelancer").then(res => res.data);
-export const getNotifications = (params) => API.get("/notifications", { params }).then(res => res.data);
-export const markNotifRead = (id) => API.patch(`/notifications/${id}/read`).then(res => res.data);
-export const markAllNotifsRead = () => API.patch("/notifications/read-all").then(res => res.data);
+/* ── USER PROFILE ─────────────────────────────────────────────────────── */
+export const getProfile = () => API.get("/users/profile").then((r) => r.data);
+export const updateProfile = (data) =>
+  API.patch("/users/profile", data).then((r) => r.data);
+export const updateEmail = (data) =>
+  API.patch("/users/email", data).then((r) => r.data);
+export const updatePreferences = (data) =>
+  API.patch("/users/preferences", data).then((r) => r.data);
+export const deleteAccount = () =>
+  API.delete("/users/account").then((r) => r.data);
 
-/* =======================
-    PROJECTS & TASKS
-======================= */
-export const getProjects = () => API.get("/projects").then(res => res.data);
-export const getProjectDetails = (id) => API.get(`/projects/${id}`).then(res => res.data);
-export const createProject = (data) => API.post("/projects", data).then((res) => res.data);
-export const fetchAllTasks = (params) => API.get("/tasks", { params }).then(res => res.data);
-export const addTask = (projectId, data) => API.post(`/tasks/project/${projectId}`, data).then(res => res.data);
+/* ── DASHBOARD ────────────────────────────────────────────────────────── */
+export const getDashboardData = () =>
+  API.get("/dashboard/freelancer").then((r) => r.data);
+
+/* ── NOTIFICATIONS ────────────────────────────────────────────────────── */
+export const getNotifications = (params) =>
+  API.get("/notifications", { params }).then((r) => r.data);
+export const markNotifRead = (id) =>
+  API.patch(`/notifications/${id}/read`).then((r) => r.data);
+export const markAllNotifsRead = () =>
+  API.patch("/notifications/read-all").then((r) => r.data);
+export const deleteNotification = (id) =>
+  API.delete(`/notifications/${id}`).then((r) => r.data);
+
+/* ── PROJECTS ─────────────────────────────────────────────────────────── */
+export const getProjects = (params) =>
+  API.get("/projects", { params }).then((r) => r.data);
+export const getProjectDetails = (id) =>
+  API.get(`/projects/${id}`).then((r) => r.data);
+export const createProject = (data) =>
+  API.post("/projects", data).then((r) => r.data);
+export const updateProject = (id, data) =>
+  API.patch(`/projects/${id}`, data).then((r) => r.data);
+export const deleteProject = (id) =>
+  API.delete(`/projects/${id}`).then((r) => r.data);
+
+/* ── TASKS ────────────────────────────────────────────────────────────── */
+export const fetchAllTasks = (params) =>
+  API.get("/tasks", { params }).then((r) => r.data);
+export const addTask = (projectId, data) =>
+  API.post(`/tasks/project/${projectId}`, data).then((r) => r.data);
+export const updateTask = (projectId, taskId, data) =>
+  API.patch(`/tasks/project/${projectId}/${taskId}`, data).then((r) => r.data);
 export const updateTaskStatus = (projectId, taskId, status) =>
-  API.patch(`/tasks/project/${projectId}/${taskId}/status`, { status }).then(res => res.data);
-export const deleteTask = (projectId, taskId) => API.delete(`/tasks/project/${projectId}/${taskId}`).then(res => res.data);
+  API.patch(`/tasks/project/${projectId}/${taskId}/status`, { status }).then(
+    (r) => r.data,
+  );
+export const deleteTask = (projectId, taskId) =>
+  API.delete(`/tasks/project/${projectId}/${taskId}`).then((r) => r.data);
 
-/* =======================
-    CLIENTS (CRM)
-======================= */
-export const getClients = (params) => API.get("/clients", { params }).then(res => res.data);
-export const getClientDetails = (id) => API.get(`/clients/${id}`).then(res => res.data);
-export const createClient = (data) => API.post("/clients", data).then(res => res.data);
-export const updateClient = (id, data) => API.patch(`/clients/${id}`, data).then(res => res.data);
+/* ── CLIENTS ──────────────────────────────────────────────────────────── */
+export const getClients = (params) =>
+  API.get("/clients", { params }).then((r) => r.data);
+export const getClientDetails = (id) =>
+  API.get(`/clients/${id}`).then((r) => r.data);
+export const createClient = (data) =>
+  API.post("/clients", data).then((r) => r.data);
+export const updateClient = (id, data) =>
+  API.patch(`/clients/${id}`, data).then((r) => r.data);
+export const deleteClient = (id) =>
+  API.delete(`/clients/${id}`).then((r) => r.data);
 
-/* =======================
-    INVOICES (FINANCIAL)
-======================= */
-export const getInvoices = (params) => API.get("/invoices", { params }).then(res => res.data);
-export const createInvoice = (data) => API.post("/invoices", data).then(res => res.data);
-export const getInvoiceDetails = (id) => API.get(`/invoices/${id}`).then(res => res.data);
+/* ── INVOICES ─────────────────────────────────────────────────────────── */
+export const getInvoices = (params) =>
+  API.get("/invoices", { params }).then((r) => r.data);
+export const getInvoiceDetails = (id) =>
+  API.get(`/invoices/${id}`).then((r) => r.data);
+export const createInvoice = (data) =>
+  API.post("/invoices", data).then((r) => r.data);
+export const updateInvoice = (id, data) =>
+  API.patch(`/invoices/${id}`, data).then((r) => r.data);
+export const updateInvoiceStatus = (id, status, paidBy) =>
+  API.patch(`/invoices/${id}/status`, { status, paidBy }).then((r) => r.data);
+export const deleteInvoice = (id) =>
+  API.delete(`/invoices/${id}`).then((r) => r.data);
 
-/* =======================
-    APPOINTMENTS & AVAILABILITY
-======================= */
-export const getAppointments = (params) => API.get("/appointments", { params }).then(res => res.data);
-export const getUpcomingAppointments = () => API.get("/appointments/upcoming").then(res => res.data);
-export const bookAppointment = (data) => API.post("/appointments", data).then(res => res.data);
+/* ── APPOINTMENTS ─────────────────────────────────────────────────────── */
+export const getAppointments = (params) =>
+  API.get("/appointments", { params }).then((r) => r.data);
+export const getUpcomingAppointments = () =>
+  API.get("/appointments/upcoming").then((r) => r.data);
+export const createAppointment = (data) =>
+  API.post("/appointments", data).then((r) => r.data);
+export const cancelAppointment = (id, reason) =>
+  API.patch(`/appointments/${id}/cancel`, { reason }).then((r) => r.data);
+export const completeAppointment = (id, status) =>
+  API.patch(`/appointments/${id}/complete`, { status }).then((r) => r.data);
+export const getAvailableSlots = (freelancerId, date) =>
+  API.get("/appointments/available-slots", {
+    params: { freelancerId, date },
+  }).then((r) => r.data);
 
-export const getAvailability = () => API.get("/availability").then(res => res.data);
-export const updateDaySlot = (data) => API.patch("/availability/day", data).then(res => res.data);
-export const addBlockedDate = (data) => API.post("/availability/blocked-dates", data).then(res => res.data);
+/* ── AVAILABILITY ─────────────────────────────────────────────────────── */
+export const getAvailability = () =>
+  API.get("/availability").then((r) => r.data);
+export const updateAvailability = (data) =>
+  API.put("/availability", data).then((r) => r.data);
+export const addBlockedDate = (data) =>
+  API.post("/availability/blocked-dates", data).then((r) => r.data);
 
-/* =======================
-    CLIENT PORTAL HELPERS
-======================= */
-export const getMyFreelancers = () => API.get("/users/my-freelancers").then(res => res.data);
-export const fetchAvailableSlots = (freelancerId, date) =>
-  API.get("/appointments/available-slots", { params: { freelancerId, date } }).then(res => res.data);
+/* ── CLIENT PORTAL ────────────────────────────────────────────────────── */
+export const getMyFreelancers = () =>
+  API.get("/users/my-freelancers").then((r) => r.data);
 
 export default API;

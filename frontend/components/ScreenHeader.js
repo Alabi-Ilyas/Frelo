@@ -2,67 +2,54 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Menu, Plus } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
+import { C } from "../utils/theme";
 
-export default function ScreenHeader({ title, tagline, onPressAdd }) {
+export default function ScreenHeader({ title, tagline, onPressAdd, rightElement }) {
   const navigation = useNavigation();
 
   return (
-    <View style={styles.header}>
-      <View>
-        <Text style={styles.tagline}>{tagline}</Text>
-        <Text style={styles.heading}>{title}</Text>
+    <View style={s.root}>
+      {/* Left: tagline + title */}
+      <View style={s.left}>
+        {tagline ? <Text style={s.tagline}>{tagline}</Text> : null}
+        <Text style={s.title} numberOfLines={1}>{title}</Text>
       </View>
-      
-      <View style={styles.rightActions}>
-        {/* Only show the Add button if an onPressAdd function is passed */}
+
+      {/* Right: optional extra element, add button, menu */}
+      <View style={s.right}>
+        {rightElement ?? null}
+
         {onPressAdd && (
-          <TouchableOpacity style={styles.addBtn} onPress={onPressAdd}>
-            <Plus size={24} color="#FFF" />
+          <TouchableOpacity style={s.addBtn} onPress={onPressAdd} activeOpacity={0.85}>
+            <Plus size={20} color={C.primary} />
           </TouchableOpacity>
         )}
-        
-        <TouchableOpacity 
-          style={styles.menuBtn} 
-          onPress={() => navigation.openDrawer()}
-        >
-          <Menu size={24} color="#1A1C19" />
+
+        <TouchableOpacity style={s.menuBtn} onPress={() => navigation.openDrawer()} activeOpacity={0.7}>
+          <Menu size={20} color="#fff" />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 20,
+const s = StyleSheet.create({
+  root: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    backgroundColor: "#FBFDF8",
+    backgroundColor: C.background,
+    paddingHorizontal: 20,
+    paddingTop: 56,
+    paddingBottom: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: C.outlineVar,
   },
-  rightActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  tagline: { fontSize: 10, fontWeight: "900", color: "#6B7280", letterSpacing: 2 },
-  heading: { fontSize: 32, fontWeight: "900", color: "#1A1C19", letterSpacing: -1 },
-  menuBtn: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F3F4EF",
-    borderRadius: 12,
-  },
-  addBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "#1A1C19",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  left:    { flex: 1, paddingRight: 12 },
+  tagline: { fontSize: 10, fontWeight: "900", color: C.secondary, letterSpacing: 2.5, marginBottom: 4 },
+  title:   { fontSize: 30, fontWeight: "900", color: C.primary, letterSpacing: -1 },
+
+  right:   { flexDirection: "row", alignItems: "center", gap: 10 },
+  addBtn:  { width: 42, height: 42, borderRadius: 12, backgroundColor: C.secondaryContainer, alignItems: "center", justifyContent: "center" },
+  menuBtn: { width: 42, height: 42, borderRadius: 12, backgroundColor: C.primary, alignItems: "center", justifyContent: "center" },
 });

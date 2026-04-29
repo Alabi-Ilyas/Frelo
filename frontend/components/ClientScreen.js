@@ -1,212 +1,241 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  Linking,
-  TextInput,
+  View, Text, FlatList, TouchableOpacity, StyleSheet,
+  ActivityIndicator, TextInput, Alert, Linking,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
-import {
-  User,
-  Mail,
-  Phone,
-  ChevronRight,
-  Search,
-  Plus,
-} from "lucide-react-native";
-import { getClients, createClient } from "../api/apiCalls"; // Added createClient
+import { UserPlus, Mail, Phone, Edit2, Trash2, Search } from "lucide-react-native";
+import { getClients, createClient, updateClient, deleteClient } from "../api/apiCalls";
 import ScreenHeader from "./ScreenHeader";
-import CreateClientModal from "../components/modals/AddClientModal"; // We'll build this next
+import AddClientModal from "./modals/AddClientModal";
+import EditClientModal from "./modals/EditClientModal";
 
 export default function ClientScreen({ navigation }) {
-  const [clients, setClients] = useState([]);
-  const [filteredClients, setFilteredClients] = useState([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [clients, setClients]       = useState([]);
+  const [filtered, setFiltered]     = useState([]);
+  const [search, setSearch]         = useState("");
+  const [loading, setLoading]       = useState(true);
+  const [addVisible, setAddVisible] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const loadClients = async () => {
+  const load = async (q = search) => {
     try {
-      const res = await getClients();
-      // Adjust based on your API structure (some return res.clients, others res.data)
-      const clientData = res.clients || res.data || [];
-      setClients(clientData);
-      setFilteredClients(clientData);
-    } catch (err) {
-      console.error("Client load error:", err);
-    } finally {
-      setLoading(false);
-    }
+      const res = await getClients(q ? { search: q } : undefined);
+      const data = res?.clients ?? [];
+      setClients(data);
+      setFiltered(data);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    loadClients();
-  }, []);
+  useFocusEffect(useCallback(() => { load(); }, []));
 
-  // Filter logic for search bar
   const handleSearch = (text) => {
     setSearch(text);
-    const filtered = clients.filter((c) =>
-      c.name.toLowerCase().includes(text.toLowerCase()),
+    const f = clients.filter(c => c.name.toLowerCase().includes(text.toLowerCase()));
+    setFiltered(f);
+  };
+
+  const handleCreate = async (data) => {
+    try { await createClient(data); setAddVisible(false); load(""); }
+    catch (e) { Alert.alert("Error", "Could not create client."); }
+  };
+
+  const handleEdit = async (id, data) => {
+    try { await updateClient(id, data); setEditTarget(null); load(""); }
+    catch (e) { Alert.alert("Error", "Could not update client."); }
+  };
+
+  const confirmDelete = (client) => {
+    Alert.alert(
+      "Delete Client",
+      `Permanently delete ${client.name}? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete", style: "destructive",
+          onPress: async () => {
+            try { await deleteClient(client._id); load(""); }
+            catch (e) { Alert.alert("Error", "Could not delete client."); }
+          },
+        },
+      ]
     );
-    setFilteredClients(filtered);
   };
 
-  const handleCreateClient = async (clientData) => {
-    try {
-      await createClient(clientData);
-      loadClients(); // Refresh list
-    } catch (err) {
-      alert("Error creating client. Check console.");
-    }
-  };
+  const total   = clients.length;
+  const active  = clients.filter(c => c.hasPortalAccess).length;
+  const pending = clients.filter(c => c.portalInviteSent && !c.hasPortalAccess).length;
 
-  const renderClientItem = ({ item }) => (
-    <View style={styles.clientCard}>
-      <TouchableOpacity
-        style={styles.cardMain}
-        onPress={() =>
-          navigation.navigate("ClientDetail", { clientId: item._id })
-        }
-      >
-        <View
-          style={[styles.avatar, { backgroundColor: item.color || "#D7E8CD" }]}
-        >
-          <Text style={styles.avatarText}>
-            {item.name.charAt(0).toUpperCase()}
-          </Text>
-        </View>
+  const renderItem = ({ item }) => {
+    const initials = item.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+    const portalLabel = item.hasPortalAccess ? "Portal Active"
+      : item.portalInviteSent ? "Invite Sent" : "No Portal";
+    const portalColor = item.hasPortalAccess ? "#16A34A" : "#9CA3AF";
 
-        <View style={styles.info}>
-          <Text style={styles.clientName}>{item.name}</Text>
-          <Text style={styles.clientEmail} numberOfLines={1}>
-            {item.email}
-          </Text>
-        </View>
-      </TouchableOpacity>
-
-      <View style={styles.actions}>
+    return (
+      <View style={s.card}>
         <TouchableOpacity
-          style={styles.actionIcon}
-          onPress={() => Linking.openURL(`mailto:${item.email}`)}
+          style={s.cardMain}
+          onPress={() => navigation.navigate("ClientDetail", { clientId: item._id })}
+          activeOpacity={0.7}
         >
-          <Mail size={18} color="#6B7280" />
+          <View style={[s.avatar, { backgroundColor: item.color ?? "#7C6EF8" }]}>
+            <Text style={s.avatarText}>{initials}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={s.nameRow}>
+              <Text style={s.clientName}>{item.name}</Text>
+              <View style={[s.portalBadge, { borderColor: portalColor }]}>
+                <Text style={[s.portalText, { color: portalColor }]}>{portalLabel}</Text>
+              </View>
+            </View>
+            <Text style={s.clientEmail} numberOfLines={1}>{item.email}</Text>
+            {item.phone ? (
+              <Text style={s.clientPhone}>{item.phone}</Text>
+            ) : null}
+            {item.tags?.length > 0 && (
+              <View style={s.tagsRow}>
+                {item.tags.slice(0, 3).map(tag => (
+                  <View key={tag} style={s.tag}>
+                    <Text style={s.tagText}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
 
-        {item.phone && (
-          <TouchableOpacity
-            style={styles.actionIcon}
-            onPress={() => Linking.openURL(`tel:${item.phone}`)}
-          >
-            <Phone size={18} color="#10B981" />
+        <View style={s.actions}>
+          <TouchableOpacity style={s.actionBtn} onPress={() => Linking.openURL(`mailto:${item.email}`)}>
+            <Mail size={16} color="#6B7280" />
           </TouchableOpacity>
-        )}
+          {item.phone && (
+            <TouchableOpacity style={s.actionBtn} onPress={() => Linking.openURL(`tel:${item.phone}`)}>
+              <Phone size={16} color="#16A34A" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={s.actionBtn} onPress={() => setEditTarget(item)}>
+            <Edit2 size={16} color="#1A1C19" />
+          </TouchableOpacity>
+          <TouchableOpacity style={[s.actionBtn, s.deleteBtn]} onPress={() => confirmDelete(item)}>
+            <Trash2 size={16} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
-    <View style={styles.container}>
+    <View style={s.root}>
       <StatusBar style="dark" />
-      <ScreenHeader
-        title="Clients"
-        tagline="RELATIONSHIPS"
-        onPressAdd={() => setModalVisible(true)}
-      />
+      <ScreenHeader title="Clients." tagline="CLIENT DIRECTORY" onPressAdd={() => setAddVisible(true)} />
 
-      {/* SEARCH BAR */}
-      <View style={styles.searchSection}>
-        <View style={styles.searchBar}>
-          <Search size={18} color="#9CA3AF" />
-          <TextInput
-            placeholder="Search clients..."
-            style={styles.searchInput}
-            value={search}
-            onChangeText={handleSearch}
-          />
+      {/* Stats */}
+      {!loading && (
+        <View style={s.statsRow}>
+          {[
+            { label: "Total Clients",  value: total },
+            { label: "Active",         value: active },
+            { label: "Pending Invite", value: pending },
+          ].map(({ label, value }) => (
+            <View key={label} style={s.statBox}>
+              <Text style={s.statValue}>{value}</Text>
+              <Text style={s.statLabel}>{label}</Text>
+            </View>
+          ))}
         </View>
+      )}
+
+      {/* Search */}
+      <View style={s.searchRow}>
+        <Search size={16} color="#9CA3AF" />
+        <TextInput
+          style={s.searchInput}
+          placeholder="Search clients..."
+          value={search}
+          onChangeText={handleSearch}
+        />
       </View>
 
       {loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color="#10B981" />
-        </View>
+        <View style={s.center}><ActivityIndicator color="#1A1C19" /></View>
       ) : (
         <FlatList
-          data={filteredClients}
-          keyExtractor={(item) => item._id}
-          renderItem={renderClientItem}
-          contentContainerStyle={styles.listContent}
+          data={filtered}
+          keyExtractor={i => i._id}
+          renderItem={renderItem}
+          contentContainerStyle={s.list}
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <User size={48} color="#E2E3DD" />
-              <Text style={styles.emptyText}>No clients found.</Text>
+            <View style={s.empty}>
+              <UserPlus size={48} color="#E2E3DD" />
+              <Text style={s.emptyText}>No clients found.</Text>
             </View>
           }
         />
       )}
 
-      <CreateClientModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSave={handleCreateClient}
+      <AddClientModal
+        visible={addVisible}
+        onClose={() => setAddVisible(false)}
+        onSave={handleCreate}
+      />
+      <EditClientModal
+        visible={!!editTarget}
+        client={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSave={handleEdit}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FBFDF8" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  searchSection: { paddingHorizontal: 24, marginBottom: 16 },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F0F1EB",
-    paddingHorizontal: 16,
-    height: 50,
-    borderRadius: 16,
-    gap: 10,
+const s = StyleSheet.create({
+  root:   { flex: 1, backgroundColor: "#FBFDF8" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  list:   { paddingHorizontal: 16, paddingBottom: 100 },
+
+  statsRow: {
+    flexDirection: "row", paddingHorizontal: 16, paddingVertical: 12,
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#F0F1EB",
   },
-  searchInput: { flex: 1, fontWeight: "600", fontSize: 14, color: "#1A1C19" },
-  listContent: { paddingHorizontal: 24, paddingBottom: 100 },
-  clientCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    padding: 12,
-    borderRadius: 24,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#F0F1EB",
+  statBox:  { flex: 1, alignItems: "center" },
+  statValue:{ fontSize: 20, fontWeight: "900", color: "#1A1C19" },
+  statLabel:{ fontSize: 9, fontWeight: "700", color: "#9CA3AF", marginTop: 2 },
+
+  searchRow: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    backgroundColor: "#F0F1EB", marginHorizontal: 16, marginVertical: 12,
+    paddingHorizontal: 14, height: 44, borderRadius: 14,
   },
-  cardMain: { flex: 1, flexDirection: "row", alignItems: "center" },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
+  searchInput: { flex: 1, fontSize: 14, fontWeight: "600", color: "#1A1C19" },
+
+  card: {
+    backgroundColor: "#FFF", borderRadius: 20, padding: 14,
+    marginBottom: 12, borderWidth: 1, borderColor: "#F0F1EB",
   },
-  avatarText: { fontSize: 20, fontWeight: "900", color: "#1A1C19" },
-  info: { marginLeft: 16, flex: 1 },
-  clientName: { fontSize: 16, fontWeight: "800", color: "#1A1C19" },
-  clientEmail: { fontSize: 12, color: "#6B7280", marginTop: 2 },
-  actions: { flexDirection: "row", gap: 8, paddingRight: 4 },
-  actionIcon: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#F3F4F6",
-  },
-  empty: { alignItems: "center", marginTop: 100 },
-  emptyText: { marginTop: 16, color: "#9CA3AF", fontWeight: "600" },
+  cardMain: { flexDirection: "row", gap: 12, marginBottom: 10 },
+  avatar:   { width: 48, height: 48, borderRadius: 16, justifyContent: "center", alignItems: "center" },
+  avatarText: { fontSize: 18, fontWeight: "900", color: "#FFF" },
+
+  nameRow:    { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 },
+  clientName: { fontSize: 15, fontWeight: "800", color: "#1A1C19" },
+  portalBadge:{ borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10 },
+  portalText: { fontSize: 9, fontWeight: "900" },
+  clientEmail:{ fontSize: 12, color: "#6B7280", marginBottom: 2 },
+  clientPhone:{ fontSize: 12, color: "#6B7280" },
+
+  tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 6 },
+  tag:     { backgroundColor: "#F3F4EF", paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
+  tagText: { fontSize: 9, fontWeight: "900", color: "#6B7280" },
+
+  actions:   { flexDirection: "row", gap: 8, justifyContent: "flex-end" },
+  actionBtn: { width: 36, height: 36, backgroundColor: "#F9FAFB", borderRadius: 10, justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#F0F1EB" },
+  deleteBtn: { borderColor: "#FEE2E2" },
+
+  empty:     { alignItems: "center", marginTop: 80, gap: 12 },
+  emptyText: { color: "#9CA3AF", fontWeight: "600" },
 });
