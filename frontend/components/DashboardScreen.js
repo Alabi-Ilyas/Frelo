@@ -68,11 +68,17 @@ export default function DashboardScreen({ navigation }) {
   const upcoming48     = data?.upcoming48 ?? data?.upcomingAppointments ?? [];
   const pendingTasks   = data?.pendingTasks ?? [];
   const recentInvoices = data?.recentInvoices ?? [];
+  const projectProgress = data?.projectProgress ?? [];
 
   // Client with no linked freelancer — show inline banner, not fullscreen blocker
   const isUnlinkedClient = isClient && data && !data.profile;
 
-  const statCards = [
+  const statCards = isClient ? [
+    { label: "ACTIVE PROJECTS",  value: String(stats.activeProjects ?? 0).padStart(2, "0"), sub: `${stats.totalProjects ?? 0} Total`,                                icon: Briefcase,     dark: false },
+    { label: "UNPAID INVOICES",  value: fmt(stats.unpaidTotal),                             sub: `${stats.unpaidCount ?? 0} Outstanding`,                          icon: DollarSign,    dark: true  },
+    { label: "UPCOMING APPTS",   value: String(upcoming48.length).padStart(2, "0"),         sub: upcoming48[0] ? `Next: ${upcoming48[0].time}` : "Clear schedule", icon: CalendarDays,  dark: false },
+    { label: "PAID TO DATE",     value: fmt(stats.paidTotal),                               sub: "Total paid",                                                     icon: ListTodo,      dark: false },
+  ] : [
     { label: "ACTIVE PROJECTS",  value: String(stats.activeProjects ?? 0).padStart(2, "0"), sub: `${stats.totalProjects ?? 0} Total`,                                icon: Briefcase,     dark: false },
     { label: "UNPAID INVOICES",  value: fmt(stats.unpaidTotal),                             sub: `${stats.unpaidCount ?? 0} Outstanding`,                          icon: DollarSign,    dark: true  },
     { label: "UPCOMING (48H)",   value: String(stats.upcoming48Count ?? 0).padStart(2, "0"),sub: upcoming48[0] ? `Next: ${upcoming48[0].time}` : "Clear schedule", icon: CalendarDays,  dark: false },
@@ -131,29 +137,33 @@ export default function DashboardScreen({ navigation }) {
         <View style={s.section}>
           <View style={s.sectionHeader}>
             <Text style={s.sectionTitle}>UPCOMING APPOINTMENTS</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Calendar")}>
+            <TouchableOpacity onPress={() => navigation.navigate(isClient ? "Booking" : "Calendar")}>
               <Text style={s.sectionLink}>VIEW CALENDAR</Text>
             </TouchableOpacity>
           </View>
           <View style={[s.card, shadow]}>
             {upcoming48.length > 0 ? (
-              upcoming48.map((apt, i) => (
-                <View key={apt._id} style={[s.aptRow, i > 0 && s.aptRowBorder]}>
-                  <View style={s.aptAvatar}>
-                    <Text style={s.aptAvatarText}>
-                      {apt.clientId?.name?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() ?? "FP"}
-                    </Text>
+              upcoming48.map((apt, i) => {
+                const personName = isClient
+                  ? (apt.freelancerId?.businessName ?? apt.freelancerId?.name ?? "Freelancer")
+                  : (apt.clientId?.name ?? "Client");
+                const initials = personName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+                return (
+                  <View key={apt._id} style={[s.aptRow, i > 0 && s.aptRowBorder]}>
+                    <View style={s.aptAvatar}>
+                      <Text style={s.aptAvatarText}>{initials}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.aptName}>{personName}</Text>
+                      <Text style={s.aptTitle} numberOfLines={1}>{apt.title}</Text>
+                    </View>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={s.aptTime}>{apt.time}</Text>
+                      <Text style={s.aptType}>{apt.type ?? "Meeting"}</Text>
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.aptName}>{apt.clientId?.name ?? "Client"}</Text>
-                    <Text style={s.aptTitle} numberOfLines={1}>{apt.title}</Text>
-                  </View>
-                  <View style={{ alignItems: "flex-end" }}>
-                    <Text style={s.aptTime}>{apt.time}</Text>
-                    <Text style={s.aptType}>{apt.type ?? "Meeting"}</Text>
-                  </View>
-                </View>
-              ))
+                );
+              })
             ) : (
               <View style={s.empty}>
                 <CalendarDays size={28} color={C.outlineVar} />
@@ -163,45 +173,72 @@ export default function DashboardScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Pending Tasks */}
+        {/* Pending Tasks / Project Progress */}
         <View style={s.section}>
           <View style={s.sectionHeader}>
-            <Text style={s.sectionTitle}>MY TO-DO LIST</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Tasks")}>
+            <Text style={s.sectionTitle}>{isClient ? "MY PROJECTS" : "MY TO-DO LIST"}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate(isClient ? "Projects" : "Tasks")}>
               <Text style={s.sectionLink}>VIEW ALL</Text>
             </TouchableOpacity>
           </View>
           <View style={[s.card, shadow]}>
-            {pendingTasks.length > 0 ? (
-              pendingTasks.map((task, i) => {
-                const isOverdue = task.status === "Overdue";
-                return (
-                  <View key={task._id} style={[s.taskRow, i > 0 && s.taskRowBorder]}>
-                    <View style={[s.taskDot, isOverdue && s.taskDotOverdue]} />
+            {isClient ? (
+              projectProgress.length > 0 ? (
+                projectProgress.slice(0, 4).map((proj, i) => (
+                  <View key={proj._id} style={[s.taskRow, i > 0 && s.taskRowBorder]}>
+                    <View style={[s.taskDot, proj.status === "Overdue" && s.taskDotOverdue]} />
                     <View style={{ flex: 1 }}>
-                      <Text style={s.taskText} numberOfLines={2}>{task.text}</Text>
+                      <Text style={s.taskText} numberOfLines={1}>{proj.name}</Text>
                       <View style={s.taskMeta}>
                         <View style={s.taskProjectBadge}>
-                          <Text style={s.taskProjectText}>{task.projectName}</Text>
+                          <Text style={s.taskProjectText}>{proj.status}</Text>
                         </View>
                         <View style={s.taskTimeBadge}>
-                          <Clock size={10} color={isOverdue ? C.error : C.outline} />
-                          <Text style={[s.taskTimeText, isOverdue && { color: C.error }]}>
-                            {task.due
-                              ? new Date(task.due).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                              : task.status}
-                          </Text>
+                          <Clock size={10} color={C.outline} />
+                          <Text style={s.taskTimeText}>{proj.progress}% done</Text>
                         </View>
                       </View>
                     </View>
                   </View>
-                );
-              })
+                ))
+              ) : (
+                <View style={s.empty}>
+                  <RefreshCcw size={28} color={C.outlineVar} />
+                  <Text style={s.emptyText}>No active projects yet.</Text>
+                </View>
+              )
             ) : (
-              <View style={s.empty}>
-                <RefreshCcw size={28} color={C.outlineVar} />
-                <Text style={s.emptyText}>All tasks cleared. Architecture is complete.</Text>
-              </View>
+              pendingTasks.length > 0 ? (
+                pendingTasks.map((task, i) => {
+                  const isOverdue = task.status === "Overdue";
+                  return (
+                    <View key={task._id} style={[s.taskRow, i > 0 && s.taskRowBorder]}>
+                      <View style={[s.taskDot, isOverdue && s.taskDotOverdue]} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.taskText} numberOfLines={2}>{task.text}</Text>
+                        <View style={s.taskMeta}>
+                          <View style={s.taskProjectBadge}>
+                            <Text style={s.taskProjectText}>{task.projectName}</Text>
+                          </View>
+                          <View style={s.taskTimeBadge}>
+                            <Clock size={10} color={isOverdue ? C.error : C.outline} />
+                            <Text style={[s.taskTimeText, isOverdue && { color: C.error }]}>
+                              {task.due
+                                ? new Date(task.due).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                                : task.status}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })
+              ) : (
+                <View style={s.empty}>
+                  <RefreshCcw size={28} color={C.outlineVar} />
+                  <Text style={s.emptyText}>All tasks cleared. Architecture is complete.</Text>
+                </View>
+              )
             )}
             <TouchableOpacity style={s.viewAllBtn} onPress={() => navigation.navigate("Projects")}>
               <Text style={s.viewAllBtnText}>+ VIEW ALL PROJECTS & TASKS</Text>
@@ -219,25 +256,29 @@ export default function DashboardScreen({ navigation }) {
               </TouchableOpacity>
             </View>
             <View style={[s.card, shadow]}>
-              {recentInvoices.map((inv, i) => (
-                <View key={inv._id} style={[s.invRow, i > 0 && s.invRowBorder]}>
-                  <View style={s.invAvatar}>
-                    <Text style={s.invAvatarText}>
-                      {inv.clientId?.name?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() ?? "??"}
-                    </Text>
+              {recentInvoices.map((inv, i) => {
+                const label = isClient
+                  ? (inv.freelancerId?.businessName ?? inv.freelancerId?.name ?? "Freelancer")
+                  : (inv.clientId?.name ?? "Unknown");
+                const initials = label.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+                return (
+                  <View key={inv._id} style={[s.invRow, i > 0 && s.invRowBorder]}>
+                    <View style={s.invAvatar}>
+                      <Text style={s.invAvatarText}>{initials}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.invClient}>{label}</Text>
+                      <Text style={s.invNum}>{inv.invoiceNumber}</Text>
+                    </View>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={s.invAmount}>{fmt(inv.amount)}</Text>
+                      <Text style={[s.invStatus, { color: inv.status === "Paid" ? C.success : inv.status === "Overdue" ? C.error : C.yellow }]}>
+                        {inv.status?.toUpperCase()}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.invClient}>{inv.clientId?.name ?? "Unknown"}</Text>
-                    <Text style={s.invNum}>{inv.invoiceNumber}</Text>
-                  </View>
-                  <View style={{ alignItems: "flex-end" }}>
-                    <Text style={s.invAmount}>{fmt(inv.amount)}</Text>
-                    <Text style={[s.invStatus, { color: inv.status === "Paid" ? C.success : inv.status === "Overdue" ? C.error : C.yellow }]}>
-                      {inv.status?.toUpperCase()}
-                    </Text>
-                  </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
           </View>
         )}

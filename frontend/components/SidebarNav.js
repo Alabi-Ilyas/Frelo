@@ -10,10 +10,12 @@ import {
 import Dashboard          from "./DashboardScreen";
 import ProjectScreen      from "./ProjectScreen";
 import ProjectDetailScreen from "./ProjectDetailScreen";
+import ClientProjectDetailScreen from "./ClientProjectDetailScreen";
 import TasksScreen        from "./TaskScreen";
 import ClientScreen       from "./ClientScreen";
 import ClientDetailScreen from "./ClientDetailScreen";
 import CalendarScreen     from "./CalendarScreen";
+import ClientBookingScreen from "./ClientBookingScreen";
 import InvoiceScreen      from "./InvoiceScreen";
 import AvailabilityScreen from "./AvailabilityScreen";
 import SettingsScreen     from "./SettingsScreen";
@@ -25,6 +27,15 @@ import { useAuth } from "../components/context/AuthContext";
 
 const Drawer = createDrawerNavigator();
 const Stack  = createStackNavigator();
+
+function ClientProjectsStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProjectList"   component={ProjectScreen} />
+      <Stack.Screen name="ProjectDetail" component={ClientProjectDetailScreen} />
+    </Stack.Navigator>
+  );
+}
 
 function ProjectsStack() {
   return (
@@ -112,17 +123,17 @@ export default function SidebarNav() {
         <>
           <Drawer.Screen
             name="Projects"
-            component={ProjectsStack}
+            component={ClientProjectsStack}
             options={{ drawerIcon: ({ color }) => <Briefcase size={20} color={color} /> }}
           />
           <Drawer.Screen
             name="Invoices"
             component={InvoiceScreen}
-            options={{ title: "Financial Ledger", drawerIcon: ({ color }) => <Receipt size={20} color={color} /> }}
+            options={{ title: "Invoices", drawerIcon: ({ color }) => <Receipt size={20} color={color} /> }}
           />
           <Drawer.Screen
             name="Booking"
-            component={CalendarScreen}
+            component={ClientBookingScreen}
             options={{ title: "Appointments", drawerIcon: ({ color }) => <Calendar size={20} color={color} /> }}
           />
           <Drawer.Screen

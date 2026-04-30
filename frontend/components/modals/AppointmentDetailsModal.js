@@ -22,7 +22,10 @@ function fmt12(time) {
   return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
 }
 
-export default function AppointmentDetailModal({
+export { AppointmentDetailModal };
+export default AppointmentDetailModal;
+
+function AppointmentDetailModal({
   visible, appointment, onClose, onCancel, onComplete, actionLoading,
 }) {
   if (!appointment) return null;
@@ -126,7 +129,7 @@ export default function AppointmentDetailModal({
                 </TouchableOpacity>
               )}
 
-              {canComplete && (
+              {canComplete && onComplete && (
                 <View style={s.completeRow}>
                   <TouchableOpacity
                     style={s.completeBtn}

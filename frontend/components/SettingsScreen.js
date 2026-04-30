@@ -22,7 +22,8 @@ const TIMEZONES = [
 ];
 
 export default function SettingsScreen({ navigation }) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const isClient = user?.role === "client";
   const [currency, setCurrency] = useState("USD");
   const [timezone, setTimezone] = useState("America/New_York");
   const [savingPrefs, setSavingPrefs] = useState(false);
@@ -148,17 +149,33 @@ export default function SettingsScreen({ navigation }) {
       </View>
 
       {/* Workflow */}
-      <Text style={s.sectionHeader}>WORKFLOW</Text>
-      <View style={[s.card, shadow]}>
-        <TouchableOpacity style={s.linkRow} onPress={() => navigation.navigate("Availability")}>
-          <Text style={s.linkText}>Work Hours</Text>
-          <ChevronRight size={18} color={C.outlineVar} />
-        </TouchableOpacity>
-        <TouchableOpacity style={[s.linkRow, s.linkBorder]} onPress={() => navigation.navigate("Profile")}>
-          <Text style={s.linkText}>Profile Details</Text>
-          <ChevronRight size={18} color={C.outlineVar} />
-        </TouchableOpacity>
-      </View>
+      {!isClient && (
+        <>
+          <Text style={s.sectionHeader}>WORKFLOW</Text>
+          <View style={[s.card, shadow]}>
+            <TouchableOpacity style={s.linkRow} onPress={() => navigation.navigate("Availability")}>
+              <Text style={s.linkText}>Work Hours</Text>
+              <ChevronRight size={18} color={C.outlineVar} />
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.linkRow, s.linkBorder]} onPress={() => navigation.navigate("Profile")}>
+              <Text style={s.linkText}>Profile Details</Text>
+              <ChevronRight size={18} color={C.outlineVar} />
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
+      {isClient && (
+        <>
+          <Text style={s.sectionHeader}>ACCOUNT</Text>
+          <View style={[s.card, shadow]}>
+            <TouchableOpacity style={s.linkRow} onPress={() => navigation.navigate("Profile")}>
+              <Text style={s.linkText}>Profile Details</Text>
+              <ChevronRight size={18} color={C.outlineVar} />
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
 
       {/* Danger zone */}
       <Text style={[s.sectionHeader, { color: C.error }]}>DANGER ZONE</Text>

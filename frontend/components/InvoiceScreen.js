@@ -6,12 +6,14 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
-import { TrendingUp, CheckCircle, Clock, Eye, Plus } from "lucide-react-native";
+import { TrendingUp, CheckCircle, Clock, Eye, Plus, MessageSquare, Pencil } from "lucide-react-native";
 import { getInvoices, getClientInvoices, createInvoice, updateInvoiceStatus, getProjects } from "../api/apiCalls";
 import { useAuth } from "../components/context/AuthContext";
 import ScreenHeader from "./ScreenHeader";
 import CreateInvoiceModal from "./modals/CreateInvoiceModal";
 import InvoiceDetailModal from "./modals/InvoiceDetailModal";
+import ClientInvoiceDetailModal from "./modals/ClientInvoiceDetailModal";
+import EditInvoiceModal from "./modals/EditInvoiceModal";
 
 const TABS = ["All", "Unpaid", "Paid", "Review"];
 
@@ -35,6 +37,8 @@ export default function InvoiceScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
   const [detailInvoice, setDetailInvoice] = useState(null);
+  const [reviewInvoice, setReviewInvoice] = useState(null);
+  const [editInvoice, setEditInvoice]     = useState(null);
 
   const load = async () => {
     try {
@@ -73,27 +77,31 @@ export default function InvoiceScreen() {
     } catch (e) { Alert.alert("Error", "Could not create invoice."); }
   };
 
-  const stats = [
-    { label: "OUTSTANDING",  value: fmt(summary?.Unpaid?.total ?? 0),  icon: TrendingUp, color: "#EF4444" },
-    { label: "COLLECTED",    value: fmt(summary?.Paid?.total ?? 0),    icon: CheckCircle, color: "#16A34A" },
-    { label: "UNDER REVIEW", value: fmt(summary?.Review?.total ?? 0),  icon: Clock,       color: "#F97316" },
+  const clientStats = [
+    { label: "OUTSTANDING",  value: fmt(isClient ? (summary?.unpaid ?? 0) : (summary?.Unpaid?.total ?? 0)),  icon: TrendingUp,  color: "#EF4444" },
+    { label: "COLLECTED",    value: fmt(isClient ? (summary?.paid   ?? 0) : (summary?.Paid?.total   ?? 0)),  icon: CheckCircle, color: "#16A34A" },
+    { label: "UNDER REVIEW", value: fmt(isClient ? (summary?.review ?? 0) : (summary?.Review?.total ?? 0)),  icon: Clock,       color: "#F97316" },
   ];
 
   const renderItem = ({ item }) => {
     const cfg = STATUS_CLASS[item.status] ?? STATUS_CLASS.Cancelled;
     const isPastDue = item.status === "Unpaid" && new Date(item.dueDate) < new Date();
+    const clientLabel = isClient
+      ? (item.freelancerId?.businessName ?? item.freelancerId?.name ?? "Your Freelancer")
+      : (item.clientId?.name ?? "Private Client");
+    const statusLabel = item.status === "Review" ? "UNDER REVIEW" : item.status?.toUpperCase();
     return (
       <TouchableOpacity style={s.card} onPress={() => setDetailInvoice(item)} activeOpacity={0.7}>
         <View style={s.cardTop}>
           <View style={{ flex: 1 }}>
             <Text style={s.invNum}>{item.invoiceNumber}</Text>
-            <Text style={s.invClient}>{item.clientId?.name ?? "Private Client"}</Text>
+            <Text style={s.invClient}>{clientLabel}</Text>
             {item.projectId?.name && <Text style={s.invProject}>{item.projectId.name}</Text>}
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <Text style={s.invAmount}>{fmt(item.amount)}</Text>
             <View style={[s.badge, { backgroundColor: cfg.bg }]}>
-              <Text style={[s.badgeText, { color: cfg.text }]}>{item.status?.toUpperCase()}</Text>
+              <Text style={[s.badgeText, { color: cfg.text }]}>{statusLabel}</Text>
             </View>
           </View>
         </View>
@@ -106,9 +114,21 @@ export default function InvoiceScreen() {
           </Text>
         </View>
         <View style={s.cardActions}>
-          {item.status === "Unpaid" && (
+          {!isClient && item.status === "Unpaid" && (
             <TouchableOpacity style={s.markPaidBtn} onPress={() => handleMarkPaid(item)}>
               <Text style={s.markPaidText}>MARK PAID</Text>
+            </TouchableOpacity>
+          )}
+          {!isClient && (item.status === "Unpaid" || item.status === "Review") && (
+            <TouchableOpacity style={s.editCardBtn} onPress={() => setEditInvoice(item)}>
+              <Pencil size={14} color={C.primary} />
+              <Text style={s.editCardBtnText}>EDIT</Text>
+            </TouchableOpacity>
+          )}
+          {isClient && item.status === "Unpaid" && (
+            <TouchableOpacity style={s.flagBtn} onPress={() => setReviewInvoice(item)}>
+              <MessageSquare size={14} color="#F97316" />
+              <Text style={s.flagBtnText}>FLAG FOR REVIEW</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={s.viewBtn} onPress={() => setDetailInvoice(item)}>
@@ -122,11 +142,11 @@ export default function InvoiceScreen() {
   return (
     <View style={s.root}>
       <StatusBar style="dark" />
-      <ScreenHeader title="Invoices." tagline="FINANCIAL LEDGER" onPressAdd={() => setCreateVisible(true)} />
+      <ScreenHeader title="Invoices." tagline={isClient ? "CLIENT PORTAL" : "FINANCIAL LEDGER"} onPressAdd={isClient ? undefined : () => setCreateVisible(true)} />
 
       {/* Stats */}
       <View style={s.statsRow}>
-        {stats.map(({ label, value, icon: Icon, color }) => (
+        {clientStats.map(({ label, value, icon: Icon, color }) => (
           <View key={label} style={s.statBox}>
             <Icon size={14} color={color} />
             <Text style={[s.statValue, { color }]}>{value}</Text>
@@ -166,10 +186,12 @@ export default function InvoiceScreen() {
         />
       )}
 
-      {/* FAB */}
-      <TouchableOpacity style={s.fab} onPress={() => setCreateVisible(true)}>
-        <Plus size={26} color="#FFF" />
-      </TouchableOpacity>
+      {/* FAB — freelancer only */}
+      {!isClient && (
+        <TouchableOpacity style={s.fab} onPress={() => setCreateVisible(true)}>
+          <Plus size={26} color="#FFF" />
+        </TouchableOpacity>
+      )}
 
       <CreateInvoiceModal
         visible={createVisible}
@@ -177,11 +199,35 @@ export default function InvoiceScreen() {
         onSave={handleCreate}
         projects={projects}
       />
-      <InvoiceDetailModal
-        visible={!!detailInvoice}
-        invoice={detailInvoice}
-        onClose={() => setDetailInvoice(null)}
-        onMarkPaid={() => { handleMarkPaid(detailInvoice); setDetailInvoice(null); }}
+      {isClient ? (
+        <ClientInvoiceDetailModal
+          visible={!!detailInvoice}
+          invoice={detailInvoice}
+          onClose={() => setDetailInvoice(null)}
+          onRefresh={load}
+        />
+      ) : (
+        <InvoiceDetailModal
+          visible={!!detailInvoice}
+          invoice={detailInvoice}
+          onClose={() => setDetailInvoice(null)}
+          onMarkPaid={() => { handleMarkPaid(detailInvoice); setDetailInvoice(null); }}
+          onRefresh={load}
+        />
+      )}
+      <EditInvoiceModal
+        visible={!!editInvoice}
+        invoice={editInvoice}
+        onClose={() => setEditInvoice(null)}
+        onSaved={() => { setEditInvoice(null); load(); }}
+      />
+      {/* Quick review modal — opened from list card flag button */}}
+      <ClientInvoiceDetailModal
+        visible={!!reviewInvoice}
+        invoice={reviewInvoice}
+        onClose={() => setReviewInvoice(null)}
+        onRefresh={load}
+        openReviewForm
       />
     </View>
   );
@@ -217,6 +263,10 @@ const s = StyleSheet.create({
   markPaidBtn:{ borderWidth: 1, borderColor: "#426900", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   markPaidText:{ fontSize: 10, fontWeight: "900", color: "#426900" },
   viewBtn:    { width: 34, height: 34, backgroundColor: "#f8f9fa", borderRadius: 10, justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
+  editCardBtn:    { flexDirection: "row", alignItems: "center", gap: 5, borderWidth: 1, borderColor: C.outlineVar, backgroundColor: C.surfaceLow, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
+  editCardBtnText:{ fontSize: 9, fontWeight: "900", color: C.primary },
+  flagBtn:    { flexDirection: "row", alignItems: "center", gap: 5, borderWidth: 1, borderColor: "#FED7AA", backgroundColor: "#FFF7ED", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
+  flagBtnText:{ fontSize: 9, fontWeight: "900", color: "#F97316" },
 
   fab: { position: "absolute", bottom: 30, right: 24, width: 60, height: 60, borderRadius: 20, backgroundColor: "#000613", justifyContent: "center", alignItems: "center", elevation: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
 
