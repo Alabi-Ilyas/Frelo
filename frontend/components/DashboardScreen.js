@@ -11,7 +11,7 @@ import {
   Clock, AlertCircle, RefreshCcw,
 } from "lucide-react-native";
 import { useAuth } from "../components/context/AuthContext";
-import { getDashboardData } from "../api/apiCalls";
+import { getDashboardData, getClientDashboard } from "../api/apiCalls";
 import { C, shadow } from "../utils/theme";
 
 const fmt = (n) => `₦${Number(n || 0).toLocaleString()}`;
@@ -26,8 +26,12 @@ export default function DashboardScreen({ navigation }) {
   const load = async () => {
     try {
       setError(null);
-      const res = await getDashboardData();
+      const res = user?.role === "client"
+        ? await getClientDashboard()
+        : await getDashboardData();
+      // Client dashboard returns success:true even with no linked profile
       if (res.success) setData(res);
+      else setError("Could not sync workspace.");
     } catch (e) {
       setError("Could not sync workspace.");
     } finally {
@@ -59,10 +63,14 @@ export default function DashboardScreen({ navigation }) {
     );
   }
 
-  const stats = data?.stats ?? {};
-  const upcoming48    = data?.upcoming48 ?? [];
-  const pendingTasks  = data?.pendingTasks ?? [];
+  const stats         = data?.stats ?? {};
+  const isClient       = user?.role === "client";
+  const upcoming48     = data?.upcoming48 ?? data?.upcomingAppointments ?? [];
+  const pendingTasks   = data?.pendingTasks ?? [];
   const recentInvoices = data?.recentInvoices ?? [];
+
+  // Client with no linked freelancer — show inline banner, not fullscreen blocker
+  const isUnlinkedClient = isClient && data && !data.profile;
 
   const statCards = [
     { label: "ACTIVE PROJECTS",  value: String(stats.activeProjects ?? 0).padStart(2, "0"), sub: `${stats.totalProjects ?? 0} Total`,                                icon: Briefcase,     dark: false },
@@ -89,6 +97,18 @@ export default function DashboardScreen({ navigation }) {
             <Text style={s.avatarText}>{user?.name?.[0] ?? "U"}</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Unlinked client inline banner */}
+        {isUnlinkedClient && (
+          <View style={s.unlinkedBanner}>
+            <View style={s.unlinkedBannerLeft}>
+              <Text style={s.unlinkedBannerTitle}>Account Pending Connection</Text>
+              <Text style={s.unlinkedBannerBody}>
+                Your account isn't linked to a freelancer yet. Once your freelancer invites <Text style={{ fontWeight: "900" }}>{user?.email}</Text>, your data will appear here.
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* 4 Stat Cards */}
         <View style={s.statsGrid}>
@@ -294,4 +314,11 @@ const s = StyleSheet.create({
 
   empty:        { alignItems: "center", padding: 32, gap: 8 },
   emptyText:    { fontSize: 11, fontWeight: "600", color: C.outline, textAlign: "center" },
+
+  unlinkedBanner:      { backgroundColor: C.surfaceLow, borderRadius: 20, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: C.outlineVar, borderLeftWidth: 4, borderLeftColor: C.secondaryContainer },
+  unlinkedBannerLeft:  { gap: 6 },
+  unlinkedBannerTitle: { fontSize: 14, fontWeight: "900", color: C.primary },
+  unlinkedBannerBody:  { fontSize: 13, color: C.onSurfaceVar, lineHeight: 19 },
+
+  // Removed fullscreen unlinked styles — now uses inline banner above
 });

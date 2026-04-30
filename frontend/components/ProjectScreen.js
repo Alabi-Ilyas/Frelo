@@ -1,3 +1,4 @@
+import { C } from "../utils/theme";
 import React, { useState, useCallback } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
@@ -9,7 +10,8 @@ import {
   FolderOpen, TrendingUp, AlertCircle, CheckCircle2,
   DollarSign, Calendar, ChevronRight, Plus,
 } from "lucide-react-native";
-import { getProjects, getClients, createProject } from "../api/apiCalls";
+import { getProjects, getClientProjects, getClients, createProject } from "../api/apiCalls";
+import { useAuth } from "../components/context/AuthContext";
 import ScreenHeader from "./ScreenHeader";
 import CreateProjectModal from "./modals/CreateProjectModal";
 
@@ -20,7 +22,7 @@ const STATUS_CFG = {
   "Pending":     { bg: "#FFFBEB", text: "#D97706", dot: "#F59E0B", bar: "#F59E0B" },
   "Done":        { bg: "#F0FDF4", text: "#16A34A", dot: "#22C55E", bar: "#22C55E" },
   "Overdue":     { bg: "#FEF2F2", text: "#DC2626", dot: "#EF4444", bar: "#EF4444" },
-  "Cancelled":   { bg: "#F9FAFB", text: "#6B7280", dot: "#9CA3AF", bar: "#D1D5DB" },
+  "Cancelled":   { bg: "#f8f9fa", text: "#6B7280", dot: "#9CA3AF", bar: "#D1D5DB" },
 };
 
 const fmt = (n) => `₦${Number(n || 0).toLocaleString()}`;
@@ -34,6 +36,8 @@ function daysUntil(dateStr) {
 }
 
 export default function ProjectScreen({ navigation }) {
+  const { user } = useAuth();
+  const isClient = user?.role === "client";
   const [projects, setProjects]   = useState([]);
   const [clients, setClients]     = useState([]);
   const [filter, setFilter]       = useState("All");
@@ -44,9 +48,14 @@ export default function ProjectScreen({ navigation }) {
 
   const load = async () => {
     try {
-      const [pRes, cRes] = await Promise.all([getProjects(), getClients()]);
-      if (pRes?.success) setProjects(pRes.projects ?? []);
-      if (cRes?.success) setClients(cRes.clients ?? []);
+      if (isClient) {
+        const pRes = await getClientProjects();
+        if (pRes?.success) setProjects(pRes.projects ?? []);
+      } else {
+        const [pRes, cRes] = await Promise.all([getProjects(), getClients()]);
+        if (pRes?.success) setProjects(pRes.projects ?? []);
+        if (cRes?.success) setClients(cRes.clients ?? []);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -155,13 +164,13 @@ export default function ProjectScreen({ navigation }) {
   return (
     <View style={s.root}>
       <StatusBar style="dark" />
-      <ScreenHeader title="Projects." tagline="PORTFOLIO DIRECTORY" onPressAdd={() => setModalVisible(true)} />
+      <ScreenHeader title="Projects." tagline={isClient ? "CLIENT PORTAL" : "PORTFOLIO DIRECTORY"} onPressAdd={isClient ? undefined : () => setModalVisible(true)} />
 
       {/* Stats strip */}
       {!loading && (
         <View style={s.statsRow}>
           {[
-            { label: "Total",    value: stats.total,          icon: FolderOpen,   color: "#1A1C19" },
+            { label: "Total",    value: stats.total,          icon: FolderOpen,   color: "#000613" },
             { label: "Active",   value: stats.active,         icon: TrendingUp,   color: "#2563EB" },
             { label: "Overdue",  value: stats.overdue,        icon: AlertCircle,  color: "#EF4444" },
             { label: "Done",     value: stats.done,           icon: CheckCircle2, color: "#16A34A" },
@@ -190,7 +199,7 @@ export default function ProjectScreen({ navigation }) {
       </View>
 
       {loading ? (
-        <View style={s.center}><ActivityIndicator color="#1A1C19" /></View>
+        <View style={s.center}><ActivityIndicator color="#000613" /></View>
       ) : (
         <FlatList
           data={filtered}
@@ -201,49 +210,51 @@ export default function ProjectScreen({ navigation }) {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
           ListEmptyComponent={
             <View style={s.empty}>
-              <FolderOpen size={48} color="#E2E3DD" />
+              <FolderOpen size={48} color="#e6e8ea" />
               <Text style={s.emptyText}>No projects found.</Text>
             </View>
           }
         />
       )}
 
-      <CreateProjectModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSave={handleCreate}
-        clients={clients}
-        loading={creating}
-      />
+      {!isClient && (
+        <CreateProjectModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          onSave={handleCreate}
+          clients={clients}
+          loading={creating}
+        />
+      )}
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: "#FBFDF8" },
+  root:   { flex: 1, backgroundColor: "#f8f9fa" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   list:   { paddingHorizontal: 16, paddingBottom: 100 },
 
   statsRow: {
     flexDirection: "row", paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#F0F1EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "rgba(196,198,207,0.4)",
   },
   statBox:  { flex: 1, alignItems: "center", gap: 2 },
-  statValue:{ fontSize: 13, fontWeight: "900", color: "#1A1C19" },
+  statValue:{ fontSize: 13, fontWeight: "900", color: "#000613" },
   statLabel:{ fontSize: 8, fontWeight: "700", color: "#9CA3AF" },
 
   filterRow: {
     flexDirection: "row", paddingHorizontal: 12, paddingVertical: 8,
-    backgroundColor: "#F3F4EF", gap: 6,
+    backgroundColor: "#f3f4f5", gap: 6,
   },
   filterTab:       { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, backgroundColor: "transparent" },
   filterTabActive: { backgroundColor: "#FFF" },
   filterText:      { fontSize: 10, fontWeight: "900", color: "#9CA3AF" },
-  filterTextActive:{ color: "#1A1C19" },
+  filterTextActive:{ color: "#000613" },
 
   card: {
     backgroundColor: "#FFF", borderRadius: 20, padding: 18,
-    marginBottom: 14, borderWidth: 1, borderColor: "#F0F1EB",
+    marginBottom: 14, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)",
   },
   cardDone: { opacity: 0.7 },
 
@@ -252,27 +263,27 @@ const s = StyleSheet.create({
   badgeDot: { width: 6, height: 6, borderRadius: 3 },
   badgeText:{ fontSize: 9, fontWeight: "900" },
 
-  projName:   { fontSize: 18, fontWeight: "800", color: "#1A1C19", marginBottom: 4 },
+  projName:   { fontSize: 18, fontWeight: "800", color: "#000613", marginBottom: 4 },
   projClient: { fontSize: 11, fontWeight: "700", color: "#9CA3AF", letterSpacing: 0.5, marginBottom: 8 },
   projDesc:   { fontSize: 13, color: "#6B7280", lineHeight: 18, marginBottom: 10 },
 
   tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 12 },
-  tag:     { backgroundColor: "#F3F4EF", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  tag:     { backgroundColor: "#f3f4f5", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   tagText: { fontSize: 9, fontWeight: "900", color: "#6B7280" },
 
   progressSection: { marginBottom: 14 },
   progressHeader:  { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
   progressLabel:   { fontSize: 10, fontWeight: "700", color: "#9CA3AF" },
-  progressPct:     { fontSize: 10, fontWeight: "900", color: "#1A1C19" },
-  progressBg:      { height: 6, backgroundColor: "#F0F1EB", borderRadius: 3, overflow: "hidden" },
+  progressPct:     { fontSize: 10, fontWeight: "900", color: "#000613" },
+  progressBg:      { height: 6, backgroundColor: "rgba(196,198,207,0.4)", borderRadius: 3, overflow: "hidden" },
   progressFill:    { height: "100%", borderRadius: 3 },
 
-  cardFooter:  { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F9FAFB" },
+  cardFooter:  { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 12, borderTopWidth: 1, borderTopColor: "#f8f9fa" },
   footerItem:  { flexDirection: "row", alignItems: "center", gap: 5 },
   footerText:  { fontSize: 11, color: "#9CA3AF", fontWeight: "600" },
   footerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   deadlineText:{ fontSize: 10, fontWeight: "900" },
-  budgetText:  { fontSize: 11, fontWeight: "900", color: "#1A1C19" },
+  budgetText:  { fontSize: 11, fontWeight: "900", color: "#000613" },
 
   empty:     { alignItems: "center", marginTop: 80, gap: 12 },
   emptyText: { color: "#9CA3AF", fontWeight: "600" },

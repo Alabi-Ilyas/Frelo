@@ -1,3 +1,4 @@
+import { C } from "../utils/theme";
 import React, { useState, useCallback } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
@@ -15,7 +16,7 @@ const STATUS_COLORS = {
   "Pending":     { bg: "#FFFBEB", text: "#D97706" },
   "Done":        { bg: "#F0FDF4", text: "#16A34A" },
   "Overdue":     { bg: "#FEF2F2", text: "#DC2626" },
-  "Cancelled":   { bg: "#F9FAFB", text: "#6B7280" },
+  "Cancelled":   { bg: "#f8f9fa", text: "#6B7280" },
 };
 
 const INV_COLORS = {
@@ -43,7 +44,7 @@ export default function ClientDetailScreen({ route, navigation }) {
 
   useFocusEffect(useCallback(() => { load(); }, [clientId]));
 
-  if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#1A1C19" /></View>;
+  if (loading) return <View style={s.center}><ActivityIndicator size="large" color="#000613" /></View>;
   if (!data?.client) return (
     <View style={s.center}>
       <Text style={s.errorText}>Client not found.</Text>
@@ -77,12 +78,12 @@ export default function ClientDetailScreen({ route, navigation }) {
           <Text style={s.tagline}>CLIENT PROFILE</Text>
           <Text style={s.clientName}>{client.name}.</Text>
           <TouchableOpacity style={s.emailRow} onPress={() => Linking.openURL(`mailto:${client.email}`)}>
-            <Mail size={14} color="#1A1C19" />
+            <Mail size={14} color="#000613" />
             <Text style={s.contactText}>{client.email}</Text>
           </TouchableOpacity>
           {client.phone && (
             <TouchableOpacity style={s.emailRow} onPress={() => Linking.openURL(`tel:${client.phone}`)}>
-              <Phone size={14} color="#1A1C19" />
+              <Phone size={14} color="#000613" />
               <Text style={s.contactText}>{client.phone}</Text>
             </TouchableOpacity>
           )}
@@ -138,7 +139,7 @@ export default function ClientDetailScreen({ route, navigation }) {
                 </View>
               </View>
             </View>
-            <View style={[s.card, { backgroundColor: "#1A1C19" }]}>
+            <View style={[s.card, { backgroundColor: "#000613" }]}>
               <Text style={s.quickStatsTitle}>Quick Stats</Text>
               {[
                 { label: "Active Projects", value: projects.filter(p => p.status === "In Progress").length },
@@ -158,7 +159,7 @@ export default function ClientDetailScreen({ route, navigation }) {
         {tab === "Projects" && (
           <View>
             {projects.length === 0 ? (
-              <View style={s.empty}><TrendingUp size={40} color="#E2E3DD" /><Text style={s.emptyText}>No projects yet.</Text></View>
+              <View style={s.empty}><TrendingUp size={40} color="#e6e8ea" /><Text style={s.emptyText}>No projects yet.</Text></View>
             ) : projects.map((proj) => {
               const cfg = STATUS_COLORS[proj.status] ?? STATUS_COLORS["Pending"];
               return (
@@ -189,7 +190,7 @@ export default function ClientDetailScreen({ route, navigation }) {
         {tab === "Invoices" && (
           <View>
             {invoices.length === 0 ? (
-              <View style={s.empty}><Receipt size={40} color="#E2E3DD" /><Text style={s.emptyText}>No invoices yet.</Text></View>
+              <View style={s.empty}><Receipt size={40} color="#e6e8ea" /><Text style={s.emptyText}>No invoices yet.</Text></View>
             ) : (
               <View style={s.card}>
                 {invoices.map((inv) => (
@@ -219,66 +220,66 @@ export default function ClientDetailScreen({ route, navigation }) {
 }
 
 const s = StyleSheet.create({
-  root:    { flex: 1, backgroundColor: "#FBFDF8" },
+  root:    { flex: 1, backgroundColor: "#f8f9fa" },
   center:  { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
   container: { padding: 20, paddingBottom: 100 },
   errorText: { fontSize: 14, fontWeight: "700", color: "#EF4444" },
-  backBtn:   { backgroundColor: "#1A1C19", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
+  backBtn:   { backgroundColor: "#000613", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
   backBtnText: { color: "#FFF", fontWeight: "900", fontSize: 11 },
 
   backRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 16, marginTop: 8 },
   backText: { fontSize: 13, fontWeight: "700", color: "#6B7280" },
 
-  profileCard: { backgroundColor: "#FFF", borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: "#F0F1EB", alignItems: "center" },
+  profileCard: { backgroundColor: "#FFF", borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)", alignItems: "center" },
   avatar:      { width: 72, height: 72, borderRadius: 24, justifyContent: "center", alignItems: "center", marginBottom: 12 },
   avatarText:  { fontSize: 28, fontWeight: "900", color: "#FFF" },
   tagline:     { fontSize: 10, fontWeight: "900", color: "#9CA3AF", letterSpacing: 2, marginBottom: 4 },
-  clientName:  { fontSize: 26, fontWeight: "900", color: "#1A1C19", letterSpacing: -1, marginBottom: 8 },
+  clientName:  { fontSize: 26, fontWeight: "900", color: "#000613", letterSpacing: -1, marginBottom: 8 },
   emailRow:    { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
-  contactText: { fontSize: 13, fontWeight: "700", color: "#1A1C19" },
+  contactText: { fontSize: 13, fontWeight: "700", color: "#000613" },
   tagsRow:     { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8, justifyContent: "center" },
-  tag:         { backgroundColor: "#F3F4EF", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  tag:         { backgroundColor: "#f3f4f5", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   tagText:     { fontSize: 9, fontWeight: "900", color: "#6B7280" },
 
-  statsRow: { flexDirection: "row", width: "100%", marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#F0F1EB" },
+  statsRow: { flexDirection: "row", width: "100%", marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "rgba(196,198,207,0.4)" },
   statBox:  { flex: 1, alignItems: "center" },
-  statValue:{ fontSize: 14, fontWeight: "900", color: "#1A1C19" },
+  statValue:{ fontSize: 14, fontWeight: "900", color: "#000613" },
   statLabel:{ fontSize: 9, fontWeight: "700", color: "#9CA3AF", marginTop: 2 },
 
-  tabRow:       { flexDirection: "row", marginBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F0F1EB" },
+  tabRow:       { flexDirection: "row", marginBottom: 16, borderBottomWidth: 1, borderBottomColor: "rgba(196,198,207,0.4)" },
   tabBtn:       { flex: 1, paddingVertical: 12, alignItems: "center", borderBottomWidth: 2, borderBottomColor: "transparent" },
-  tabBtnActive: { borderBottomColor: "#1A1C19" },
+  tabBtnActive: { borderBottomColor: "#000613" },
   tabText:      { fontSize: 12, fontWeight: "900", color: "#9CA3AF" },
-  tabTextActive:{ color: "#1A1C19" },
+  tabTextActive:{ color: "#000613" },
 
-  card:         { backgroundColor: "#FFF", borderRadius: 20, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: "#F0F1EB" },
+  card:         { backgroundColor: "#FFF", borderRadius: 20, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
   sectionLabel: { fontSize: 10, fontWeight: "900", color: "#9CA3AF", letterSpacing: 1, marginBottom: 8 },
   notesText:    { fontSize: 14, color: "#6B7280", lineHeight: 20, marginBottom: 16 },
   overviewGrid: { flexDirection: "row", gap: 12 },
-  overviewItem: { flex: 1, backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12 },
+  overviewItem: { flex: 1, backgroundColor: "#f8f9fa", borderRadius: 12, padding: 12 },
   overviewLabel:{ fontSize: 9, fontWeight: "900", color: "#9CA3AF", marginBottom: 4 },
-  overviewValue:{ fontSize: 15, fontWeight: "900", color: "#1A1C19" },
+  overviewValue:{ fontSize: 15, fontWeight: "900", color: "#000613" },
 
   quickStatsTitle: { fontSize: 10, fontWeight: "900", color: "rgba(255,255,255,0.5)", letterSpacing: 1, marginBottom: 12 },
   quickRow:  { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8 },
   quickLabel:{ fontSize: 11, fontWeight: "700", color: "rgba(255,255,255,0.5)" },
   quickValue:{ fontSize: 18, fontWeight: "900", color: "#FFF" },
 
-  projCard:    { backgroundColor: "#FFF", borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#F0F1EB" },
+  projCard:    { backgroundColor: "#FFF", borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
   projTop:     { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
   badge:       { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   badgeText:   { fontSize: 9, fontWeight: "900" },
-  projName:    { fontSize: 16, fontWeight: "800", color: "#1A1C19", marginBottom: 4 },
+  projName:    { fontSize: 16, fontWeight: "800", color: "#000613", marginBottom: 4 },
   projBudget:  { fontSize: 12, fontWeight: "700", color: "#6B7280", marginBottom: 8 },
-  progressBg:  { height: 5, backgroundColor: "#F0F1EB", borderRadius: 3, overflow: "hidden" },
+  progressBg:  { height: 5, backgroundColor: "rgba(196,198,207,0.4)", borderRadius: 3, overflow: "hidden" },
   progressFill:{ height: "100%", backgroundColor: "#426900", borderRadius: 3 },
   progressPct: { fontSize: 10, fontWeight: "700", color: "#9CA3AF", marginTop: 4 },
 
-  invRow:    { flexDirection: "row", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F9FAFB" },
-  invNum:    { fontSize: 13, fontWeight: "900", color: "#1A1C19" },
+  invRow:    { flexDirection: "row", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f8f9fa" },
+  invNum:    { fontSize: 13, fontWeight: "900", color: "#000613" },
   invProject:{ fontSize: 11, color: "#6B7280", marginTop: 2 },
   invDate:   { fontSize: 10, color: "#9CA3AF", marginTop: 2 },
-  invAmount: { fontSize: 15, fontWeight: "900", color: "#1A1C19" },
+  invAmount: { fontSize: 15, fontWeight: "900", color: "#000613" },
   invStatus: { fontSize: 9, fontWeight: "900", marginTop: 3 },
 
   empty:     { alignItems: "center", paddingVertical: 48, gap: 12 },

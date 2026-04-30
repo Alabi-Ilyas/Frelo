@@ -1,3 +1,4 @@
+import { C } from "../utils/theme";
 import React, { useState, useCallback } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
@@ -15,7 +16,7 @@ import AddTaskModal from "./modals/AddTaskModal";
 const TASK_CFG = {
   "Done":        { icon: CheckCircle2, color: "#16A34A", bg: "#F0FDF4", text: "#16A34A" },
   "In Progress": { icon: Clock,        color: "#2563EB", bg: "#EFF6FF", text: "#2563EB" },
-  "Pending":     { icon: Circle,       color: "#9CA3AF", bg: "#F9FAFB", text: "#6B7280" },
+  "Pending":     { icon: Circle,       color: "#9CA3AF", bg: "#f8f9fa", text: "#6B7280" },
   "Overdue":     { icon: AlertCircle,  color: "#EF4444", bg: "#FEF2F2", text: "#DC2626" },
 };
 
@@ -79,7 +80,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
   if (loading) {
     return (
       <View style={s.center}>
-        <ActivityIndicator size="large" color="#1A1C19" />
+        <ActivityIndicator size="large" color="#000613" />
       </View>
     );
   }
@@ -177,7 +178,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
 
           {tasks.length === 0 ? (
             <View style={s.emptyTasks}>
-              <CheckCircle2 size={32} color="#E2E3DD" />
+              <CheckCircle2 size={32} color="#e6e8ea" />
               <Text style={s.emptyTasksText}>No tasks yet. Add one above.</Text>
             </View>
           ) : (
@@ -259,22 +260,22 @@ export default function ProjectDetailScreen({ route, navigation }) {
 }
 
 const s = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: "#FBFDF8" },
+  root:   { flex: 1, backgroundColor: "#f8f9fa" },
   center: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
   container: { padding: 20, paddingBottom: 100 },
 
   errorText: { fontSize: 14, fontWeight: "700", color: "#EF4444" },
-  backBtn:   { marginTop: 8, backgroundColor: "#1A1C19", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
+  backBtn:   { marginTop: 8, backgroundColor: "#000613", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
   backBtnText: { color: "#FFF", fontWeight: "900", fontSize: 11 },
 
   backRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 16, marginTop: 8 },
   backText: { fontSize: 13, fontWeight: "700", color: "#6B7280" },
 
-  heroCard: { backgroundColor: "#FFF", borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: "#F0F1EB" },
+  heroCard: { backgroundColor: "#FFF", borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
   heroTop:  { flexDirection: "row", justifyContent: "flex-end", marginBottom: 12 },
   statusBadge: { backgroundColor: "#ADFF2F", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
-  statusText:  { fontSize: 10, fontWeight: "900", color: "#1A1C19" },
-  heroName:    { fontSize: 26, fontWeight: "900", color: "#1A1C19", letterSpacing: -1, marginBottom: 12 },
+  statusText:  { fontSize: 10, fontWeight: "900", color: "#000613" },
+  heroName:    { fontSize: 26, fontWeight: "900", color: "#000613", letterSpacing: -1, marginBottom: 12 },
   heroMeta:    { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 12 },
   metaItem:    { flexDirection: "row", alignItems: "center", gap: 5 },
   metaText:    { fontSize: 12, fontWeight: "700", color: "#6B7280" },
@@ -283,36 +284,36 @@ const s = StyleSheet.create({
   progressSection: { marginTop: 4 },
   progressHeader:  { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
   progressLabel:   { fontSize: 10, fontWeight: "700", color: "#9CA3AF" },
-  progressPct:     { fontSize: 10, fontWeight: "900", color: "#1A1C19" },
-  progressBg:      { height: 6, backgroundColor: "#F0F1EB", borderRadius: 3, overflow: "hidden" },
+  progressPct:     { fontSize: 10, fontWeight: "900", color: "#000613" },
+  progressBg:      { height: 6, backgroundColor: "rgba(196,198,207,0.4)", borderRadius: 3, overflow: "hidden" },
   progressFill:    { height: "100%", backgroundColor: "#426900", borderRadius: 3 },
 
-  tasksCard:   { backgroundColor: "#FFF", borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: "#F0F1EB" },
+  tasksCard:   { backgroundColor: "#FFF", borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
   tasksHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-  tasksTitle:  { fontSize: 18, fontWeight: "900", color: "#1A1C19" },
+  tasksTitle:  { fontSize: 18, fontWeight: "900", color: "#000613" },
   tasksSub:    { fontSize: 10, fontWeight: "700", color: "#9CA3AF", marginTop: 2 },
-  addTaskBtn:  { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#1A1C19", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
+  addTaskBtn:  { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#000613", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
   addTaskText: { color: "#FFF", fontSize: 11, fontWeight: "900" },
 
   emptyTasks:     { alignItems: "center", paddingVertical: 32, gap: 8 },
   emptyTasksText: { fontSize: 12, color: "#9CA3AF", fontWeight: "600" },
 
-  taskRow:    { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F9FAFB", gap: 10 },
+  taskRow:    { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f8f9fa", gap: 10 },
   taskCheck:  { padding: 2 },
-  taskText:   { fontSize: 14, fontWeight: "700", color: "#1A1C19" },
+  taskText:   { fontSize: 14, fontWeight: "700", color: "#000613" },
   taskDone:   { textDecorationLine: "line-through", opacity: 0.4 },
   taskDue:    { fontSize: 10, fontWeight: "700", color: "#9CA3AF", marginTop: 3 },
   taskBadge:  { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   taskBadgeText: { fontSize: 9, fontWeight: "900" },
   deleteBtn:  { padding: 6 },
 
-  detailsCard:  { backgroundColor: "#FFF", borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: "#F0F1EB" },
+  detailsCard:  { backgroundColor: "#FFF", borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
   detailsTitle: { fontSize: 11, fontWeight: "900", color: "#9CA3AF", letterSpacing: 1, marginBottom: 12 },
-  detailRow:    { flexDirection: "row", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F9FAFB" },
+  detailRow:    { flexDirection: "row", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f8f9fa" },
   detailLabel:  { fontSize: 11, fontWeight: "900", color: "#9CA3AF", letterSpacing: 0.5 },
-  detailValue:  { fontSize: 12, fontWeight: "700", color: "#1A1C19" },
+  detailValue:  { fontSize: 12, fontWeight: "700", color: "#000613" },
 
-  summaryCard:  { backgroundColor: "#1A1C19", borderRadius: 24, padding: 20, marginBottom: 16 },
+  summaryCard:  { backgroundColor: "#000613", borderRadius: 24, padding: 20, marginBottom: 16 },
   summaryTitle: { fontSize: 11, fontWeight: "900", color: "rgba(255,255,255,0.5)", letterSpacing: 1, marginBottom: 12 },
   summaryRow:   { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8 },
   summaryLabel: { fontSize: 11, fontWeight: "900", color: "rgba(255,255,255,0.5)", letterSpacing: 0.5 },

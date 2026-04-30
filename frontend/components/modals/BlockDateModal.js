@@ -34,7 +34,7 @@ export const modalStyles = {
   },
   content: {
     width: "90%",
-    backgroundColor: "#FBFDF8",
+    backgroundColor: "#f8f9fa",
     borderRadius: 32,
     padding: 24,
     elevation: 10,
@@ -52,11 +52,11 @@ export const modalStyles = {
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#F0F1EB",
-    color: "#1A1C19",
+    borderColor: "rgba(196,198,207,0.4)",
+    color: "#000613",
   },
   primaryBtn: {
-    backgroundColor: "#10B981",
+    backgroundColor: "#426900",
     padding: 18,
     borderRadius: 20,
     alignItems: "center",

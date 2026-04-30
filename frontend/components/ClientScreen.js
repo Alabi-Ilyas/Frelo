@@ -1,3 +1,4 @@
+import { C } from "../utils/theme";
 import React, { useState, useCallback } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
@@ -118,7 +119,7 @@ export default function ClientScreen({ navigation }) {
             </TouchableOpacity>
           )}
           <TouchableOpacity style={s.actionBtn} onPress={() => setEditTarget(item)}>
-            <Edit2 size={16} color="#1A1C19" />
+            <Edit2 size={16} color="#000613" />
           </TouchableOpacity>
           <TouchableOpacity style={[s.actionBtn, s.deleteBtn]} onPress={() => confirmDelete(item)}>
             <Trash2 size={16} color="#EF4444" />
@@ -161,7 +162,7 @@ export default function ClientScreen({ navigation }) {
       </View>
 
       {loading ? (
-        <View style={s.center}><ActivityIndicator color="#1A1C19" /></View>
+        <View style={s.center}><ActivityIndicator color="#000613" /></View>
       ) : (
         <FlatList
           data={filtered}
@@ -171,7 +172,7 @@ export default function ClientScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={s.empty}>
-              <UserPlus size={48} color="#E2E3DD" />
+              <UserPlus size={48} color="#e6e8ea" />
               <Text style={s.emptyText}>No clients found.</Text>
             </View>
           }
@@ -194,46 +195,46 @@ export default function ClientScreen({ navigation }) {
 }
 
 const s = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: "#FBFDF8" },
+  root:   { flex: 1, backgroundColor: "#f8f9fa" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   list:   { paddingHorizontal: 16, paddingBottom: 100 },
 
   statsRow: {
     flexDirection: "row", paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#F0F1EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "rgba(196,198,207,0.4)",
   },
   statBox:  { flex: 1, alignItems: "center" },
-  statValue:{ fontSize: 20, fontWeight: "900", color: "#1A1C19" },
+  statValue:{ fontSize: 20, fontWeight: "900", color: "#000613" },
   statLabel:{ fontSize: 9, fontWeight: "700", color: "#9CA3AF", marginTop: 2 },
 
   searchRow: {
     flexDirection: "row", alignItems: "center", gap: 10,
-    backgroundColor: "#F0F1EB", marginHorizontal: 16, marginVertical: 12,
+    backgroundColor: "rgba(196,198,207,0.4)", marginHorizontal: 16, marginVertical: 12,
     paddingHorizontal: 14, height: 44, borderRadius: 14,
   },
-  searchInput: { flex: 1, fontSize: 14, fontWeight: "600", color: "#1A1C19" },
+  searchInput: { flex: 1, fontSize: 14, fontWeight: "600", color: "#000613" },
 
   card: {
     backgroundColor: "#FFF", borderRadius: 20, padding: 14,
-    marginBottom: 12, borderWidth: 1, borderColor: "#F0F1EB",
+    marginBottom: 12, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)",
   },
   cardMain: { flexDirection: "row", gap: 12, marginBottom: 10 },
   avatar:   { width: 48, height: 48, borderRadius: 16, justifyContent: "center", alignItems: "center" },
   avatarText: { fontSize: 18, fontWeight: "900", color: "#FFF" },
 
   nameRow:    { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 },
-  clientName: { fontSize: 15, fontWeight: "800", color: "#1A1C19" },
+  clientName: { fontSize: 15, fontWeight: "800", color: "#000613" },
   portalBadge:{ borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10 },
   portalText: { fontSize: 9, fontWeight: "900" },
   clientEmail:{ fontSize: 12, color: "#6B7280", marginBottom: 2 },
   clientPhone:{ fontSize: 12, color: "#6B7280" },
 
   tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 6 },
-  tag:     { backgroundColor: "#F3F4EF", paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
+  tag:     { backgroundColor: "#f3f4f5", paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
   tagText: { fontSize: 9, fontWeight: "900", color: "#6B7280" },
 
   actions:   { flexDirection: "row", gap: 8, justifyContent: "flex-end" },
-  actionBtn: { width: 36, height: 36, backgroundColor: "#F9FAFB", borderRadius: 10, justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#F0F1EB" },
+  actionBtn: { width: 36, height: 36, backgroundColor: "#f8f9fa", borderRadius: 10, justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
   deleteBtn: { borderColor: "#FEE2E2" },
 
   empty:     { alignItems: "center", marginTop: 80, gap: 12 },

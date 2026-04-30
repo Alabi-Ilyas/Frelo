@@ -44,11 +44,11 @@ const styles = StyleSheet.create({
   },
   alertCard: {
     width: "100%",
-    backgroundColor: "#FBFDF8",
+    backgroundColor: "#f8f9fa",
     borderRadius: 32,
     padding: 24,
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
     alignItems: "center",
   },
   alertTitle: {
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   alertMessage: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1C19",
+    color: "#000613",
     textAlign: "center",
     lineHeight: 22,
     marginBottom: 32,
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 56,
     borderRadius: 18,
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     justifyContent: "center",
     alignItems: "center",
   },

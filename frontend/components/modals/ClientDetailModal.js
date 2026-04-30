@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   card: {
-    backgroundColor: "#FBFDF8",
+    backgroundColor: "#f8f9fa",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     padding: 24,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 20,
   },
-  headerTitle: { fontSize: 24, fontWeight: "900", color: "#1A1C19" },
+  headerTitle: { fontSize: 24, fontWeight: "900", color: "#000613" },
   headerSubtitle: {
     fontSize: 10,
     fontWeight: "900",
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   closeCircle: {
     width: 40,
     height: 40,
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     marginBottom: 4,
   },
-  gridValue: { fontSize: 14, fontWeight: "800", color: "#1A1C19" },
+  gridValue: { fontSize: 14, fontWeight: "800", color: "#000613" },
 
   clientLinkCard: {
     flexDirection: "row",
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
     marginBottom: 24,
   },
   progressSection: { marginBottom: 24 },
@@ -170,11 +170,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   sectionTitle: { fontSize: 10, fontWeight: "900", color: "#9CA3AF" },
-  progressPercent: { fontSize: 12, fontWeight: "900", color: "#1A1C19" },
-  progressBarBg: { height: 8, backgroundColor: "#F0F1EB", borderRadius: 4 },
+  progressPercent: { fontSize: 12, fontWeight: "900", color: "#000613" },
+  progressBarBg: { height: 8, backgroundColor: "rgba(196,198,207,0.4)", borderRadius: 4 },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#1A1C19",
+    backgroundColor: "#000613",
     borderRadius: 4,
   },
 
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   avatarLarge: {
     width: 80,
     height: 80,
-    backgroundColor: "#1A1C19",
+    backgroundColor: "#000613",
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
@@ -197,16 +197,16 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
     marginBottom: 24,
   },
   statBox: { alignItems: "center" },
-  statNumber: { fontSize: 20, fontWeight: "900", color: "#1A1C19" },
+  statNumber: { fontSize: 20, fontWeight: "900", color: "#000613" },
   statLabel: { fontSize: 8, fontWeight: "900", color: "#9CA3AF" },
-  divider: { width: 1, height: "100%", backgroundColor: "#F0F1EB" },
+  divider: { width: 1, height: "100%", backgroundColor: "rgba(196,198,207,0.4)" },
 
   primaryAction: {
-    backgroundColor: "#1A1C19",
+    backgroundColor: "#000613",
     height: 60,
     borderRadius: 22,
     justifyContent: "center",

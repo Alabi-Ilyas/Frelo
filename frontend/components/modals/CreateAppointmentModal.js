@@ -1,3 +1,4 @@
+import { C } from "../../utils/theme";
 import React, { useState } from "react";
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
@@ -50,7 +51,7 @@ export default function CreateAppointmentModal({ visible, onClose, onSave, clien
           <View style={s.header}>
             <Text style={s.headerTitle}>BOOKING.</Text>
             <TouchableOpacity onPress={onClose} style={s.closeBtn}>
-              <X size={20} color="#1A1C19" />
+              <X size={20} color="#000613" />
             </TouchableOpacity>
           </View>
 
@@ -66,7 +67,7 @@ export default function CreateAppointmentModal({ visible, onClose, onSave, clien
             <Text style={s.label}>CLIENT *</Text>
             <TouchableOpacity style={s.inputRow} onPress={() => setShowClientPicker(!showClientPicker)}>
               <User size={16} color={clientId ? "#426900" : "#9CA3AF"} />
-              <Text style={[s.input, { color: clientId ? "#1A1C19" : "#9CA3AF" }]}>
+              <Text style={[s.input, { color: clientId ? "#000613" : "#9CA3AF" }]}>
                 {selectedClient?.name ?? "Select a client"}
               </Text>
               <ChevronDown size={16} color="#9CA3AF" />
@@ -143,16 +144,16 @@ export default function CreateAppointmentModal({ visible, onClose, onSave, clien
 
 const s = StyleSheet.create({
   overlay:    { flex: 1, backgroundColor: "rgba(26,28,25,0.6)", justifyContent: "flex-end" },
-  card:       { backgroundColor: "#FBFDF8", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: "90%" },
+  card:       { backgroundColor: "#f8f9fa", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: "90%" },
   header:     { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
-  headerTitle:{ fontSize: 22, fontWeight: "900", color: "#1A1C19" },
-  closeBtn:   { width: 40, height: 40, borderRadius: 12, backgroundColor: "#F0F1EB", justifyContent: "center", alignItems: "center" },
+  headerTitle:{ fontSize: 22, fontWeight: "900", color: "#000613" },
+  closeBtn:   { width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(196,198,207,0.4)", justifyContent: "center", alignItems: "center" },
   label:      { fontSize: 9, fontWeight: "900", color: "#9CA3AF", letterSpacing: 1.5, marginBottom: 8, marginTop: 16 },
-  inputRow:   { flexDirection: "row", alignItems: "center", backgroundColor: "#F0F1EB", borderRadius: 14, paddingHorizontal: 14, gap: 10, minHeight: 50 },
-  input:      { flex: 1, paddingVertical: 14, fontSize: 14, fontWeight: "700", color: "#1A1C19" },
-  dropdown:   { backgroundColor: "#FFF", borderRadius: 14, marginTop: 6, borderWidth: 1, borderColor: "#F0F1EB", overflow: "hidden" },
-  dropdownItem: { padding: 14, borderBottomWidth: 1, borderBottomColor: "#F9FAFB" },
-  dropdownText: { fontSize: 14, fontWeight: "700", color: "#1A1C19" },
-  saveBtn:    { backgroundColor: "#1A1C19", height: 56, borderRadius: 18, justifyContent: "center", alignItems: "center", marginTop: 24, marginBottom: 20 },
+  inputRow:   { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(196,198,207,0.4)", borderRadius: 14, paddingHorizontal: 14, gap: 10, minHeight: 50 },
+  input:      { flex: 1, paddingVertical: 14, fontSize: 14, fontWeight: "700", color: "#000613" },
+  dropdown:   { backgroundColor: "#FFF", borderRadius: 14, marginTop: 6, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)", overflow: "hidden" },
+  dropdownItem: { padding: 14, borderBottomWidth: 1, borderBottomColor: "#f8f9fa" },
+  dropdownText: { fontSize: 14, fontWeight: "700", color: "#000613" },
+  saveBtn:    { backgroundColor: "#000613", height: 56, borderRadius: 18, justifyContent: "center", alignItems: "center", marginTop: 24, marginBottom: 20 },
   saveBtnText:{ color: "#FFF", fontWeight: "900", fontSize: 13, letterSpacing: 1 },
 });

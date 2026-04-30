@@ -90,19 +90,19 @@ export default function ProjectScreen({ navigation }) {
     switch (status) {
       case "Completed":
         return {
-          bg: "#D7E8CD",
-          text: "#1A1C19",
+          bg: "#ADFF2F",
+          text: "#000613",
         };
 
       case "In Progress":
         return {
-          bg: "#1A1C19",
+          bg: "#000613",
           text: "#FFF",
         };
 
       default:
         return {
-          bg: "#F3F4EF",
+          bg: "#f3f4f5",
           text: "#6B7280",
         };
     }
@@ -150,7 +150,7 @@ export default function ProjectScreen({ navigation }) {
 
         <View style={styles.cardBottom}>
           <View style={styles.metaItem}>
-            <Calendar size={14} color="#A0A29C" />
+            <Calendar size={14} color="#75777e" />
             <Text style={styles.metaText}>
               {item.deadline
                 ? new Date(item.deadline).toLocaleDateString()
@@ -159,7 +159,7 @@ export default function ProjectScreen({ navigation }) {
           </View>
 
           <View style={styles.metaItem}>
-            <DollarSign size={14} color="#A0A29C" />
+            <DollarSign size={14} color="#75777e" />
             <Text style={styles.metaText}>
               {item.budget} {item.currency || "NGN"}
             </Text>
@@ -174,7 +174,7 @@ export default function ProjectScreen({ navigation }) {
   if (loading && !refreshing) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#1A1C19" />
+        <ActivityIndicator size="large" color="#000613" />
       </View>
     );
   }
@@ -206,7 +206,7 @@ export default function ProjectScreen({ navigation }) {
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Folder size={48} color="#E2E3DD" />
+            <Folder size={48} color="#e6e8ea" />
             <Text style={styles.emptyText}>No active projects found</Text>
           </View>
         }
@@ -234,7 +234,7 @@ export default function ProjectScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FBFDF8",
+    backgroundColor: "#f8f9fa",
   },
 
   centered: {
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
   },
 
   cardTop: {
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   projectName: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#1A1C19",
+    color: "#000613",
     marginBottom: 6,
   },
 
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#FBFDF8",
+    borderTopColor: "#f8f9fa",
     alignItems: "center",
     gap: 16,
   },
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#A0A29C",
+    color: "#75777e",
   },
 
   emptyState: {

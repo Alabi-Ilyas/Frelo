@@ -1,3 +1,4 @@
+import { C } from "../utils/theme";
 import React, { useState, useCallback } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
@@ -6,7 +7,8 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { TrendingUp, CheckCircle, Clock, Eye, Plus } from "lucide-react-native";
-import { getInvoices, createInvoice, updateInvoiceStatus, getProjects } from "../api/apiCalls";
+import { getInvoices, getClientInvoices, createInvoice, updateInvoiceStatus, getProjects } from "../api/apiCalls";
+import { useAuth } from "../components/context/AuthContext";
 import ScreenHeader from "./ScreenHeader";
 import CreateInvoiceModal from "./modals/CreateInvoiceModal";
 import InvoiceDetailModal from "./modals/InvoiceDetailModal";
@@ -17,12 +19,14 @@ const STATUS_CLASS = {
   Paid:      { bg: "#F0FDF4", text: "#16A34A" },
   Unpaid:    { bg: "#FFFBEB", text: "#D97706" },
   Review:    { bg: "#FFF7ED", text: "#F97316" },
-  Cancelled: { bg: "#F9FAFB", text: "#9CA3AF" },
+  Cancelled: { bg: "#f8f9fa", text: "#9CA3AF" },
 };
 
 const fmt = (n) => `₦${Number(n || 0).toLocaleString()}`;
 
 export default function InvoiceScreen() {
+  const { user } = useAuth();
+  const isClient = user?.role === "client";
   const [invoices, setInvoices]   = useState([]);
   const [summary, setSummary]     = useState({});
   const [projects, setProjects]   = useState([]);
@@ -34,10 +38,15 @@ export default function InvoiceScreen() {
 
   const load = async () => {
     try {
-      const params = tab !== "All" ? { status: tab } : undefined;
-      const [invRes, projRes] = await Promise.all([getInvoices(params), getProjects()]);
-      if (invRes?.success) { setInvoices(invRes.invoices ?? []); setSummary(invRes.summary ?? {}); }
-      if (projRes?.success) setProjects(projRes.projects ?? []);
+      if (isClient) {
+        const invRes = await getClientInvoices();
+        if (invRes?.success) { setInvoices(invRes.invoices ?? []); setSummary(invRes.summary ?? {}); }
+      } else {
+        const params = tab !== "All" ? { status: tab } : undefined;
+        const [invRes, projRes] = await Promise.all([getInvoices(params), getProjects()]);
+        if (invRes?.success) { setInvoices(invRes.invoices ?? []); setSummary(invRes.summary ?? {}); }
+        if (projRes?.success) setProjects(projRes.projects ?? []);
+      }
     } catch (e) { console.error(e); }
     finally { setLoading(false); setRefreshing(false); }
   };
@@ -103,7 +112,7 @@ export default function InvoiceScreen() {
             </TouchableOpacity>
           )}
           <TouchableOpacity style={s.viewBtn} onPress={() => setDetailInvoice(item)}>
-            <Eye size={16} color="#1A1C19" />
+            <Eye size={16} color="#000613" />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -124,7 +133,7 @@ export default function InvoiceScreen() {
             <Text style={s.statLabel}>{label}</Text>
           </View>
         ))}
-        <View style={[s.statBox, { backgroundColor: "#1A1C19", borderRadius: 12, padding: 8 }]}>
+        <View style={[s.statBox, { backgroundColor: "#000613", borderRadius: 12, padding: 8 }]}>
           <Text style={[s.statValue, { color: "#FFF" }]}>{invoices.length}</Text>
           <Text style={[s.statLabel, { color: "rgba(255,255,255,0.5)" }]}>TOTAL</Text>
         </View>
@@ -140,7 +149,7 @@ export default function InvoiceScreen() {
       </View>
 
       {loading ? (
-        <View style={s.center}><ActivityIndicator color="#1A1C19" /></View>
+        <View style={s.center}><ActivityIndicator color="#000613" /></View>
       ) : (
         <FlatList
           data={invoices}
@@ -179,37 +188,37 @@ export default function InvoiceScreen() {
 }
 
 const s = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: "#FBFDF8" },
+  root:   { flex: 1, backgroundColor: "#f8f9fa" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   list:   { paddingHorizontal: 16, paddingBottom: 100 },
 
-  statsRow: { flexDirection: "row", paddingHorizontal: 12, paddingVertical: 12, backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#F0F1EB", gap: 4 },
+  statsRow: { flexDirection: "row", paddingHorizontal: 12, paddingVertical: 12, backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "rgba(196,198,207,0.4)", gap: 4 },
   statBox:  { flex: 1, alignItems: "center", gap: 3 },
-  statValue:{ fontSize: 12, fontWeight: "900", color: "#1A1C19" },
+  statValue:{ fontSize: 12, fontWeight: "900", color: "#000613" },
   statLabel:{ fontSize: 7, fontWeight: "900", color: "#9CA3AF", letterSpacing: 0.5 },
 
-  tabRow:       { flexDirection: "row", backgroundColor: "#F3F4EF", paddingHorizontal: 8, paddingVertical: 6, gap: 4 },
+  tabRow:       { flexDirection: "row", backgroundColor: "#f3f4f5", paddingHorizontal: 8, paddingVertical: 6, gap: 4 },
   tabBtn:       { flex: 1, paddingVertical: 7, alignItems: "center", borderRadius: 10 },
   tabBtnActive: { backgroundColor: "#FFF" },
   tabText:      { fontSize: 10, fontWeight: "900", color: "#9CA3AF" },
-  tabTextActive:{ color: "#1A1C19" },
+  tabTextActive:{ color: "#000613" },
 
-  card: { backgroundColor: "#FFF", borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#F0F1EB" },
+  card: { backgroundColor: "#FFF", borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
   cardTop:    { flexDirection: "row", marginBottom: 10 },
   invNum:     { fontSize: 12, fontWeight: "900", color: "#9CA3AF" },
-  invClient:  { fontSize: 16, fontWeight: "700", color: "#1A1C19", marginTop: 2 },
+  invClient:  { fontSize: 16, fontWeight: "700", color: "#000613", marginTop: 2 },
   invProject: { fontSize: 11, color: "#6B7280", marginTop: 2, fontStyle: "italic" },
-  invAmount:  { fontSize: 18, fontWeight: "900", color: "#1A1C19" },
+  invAmount:  { fontSize: 18, fontWeight: "900", color: "#000613" },
   badge:      { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginTop: 4 },
   badgeText:  { fontSize: 9, fontWeight: "900" },
-  cardBottom: { flexDirection: "row", justifyContent: "space-between", paddingTop: 10, borderTopWidth: 1, borderTopColor: "#F9FAFB" },
+  cardBottom: { flexDirection: "row", justifyContent: "space-between", paddingTop: 10, borderTopWidth: 1, borderTopColor: "#f8f9fa" },
   dateText:   { fontSize: 11, fontWeight: "600", color: "#9CA3AF" },
   cardActions:{ flexDirection: "row", justifyContent: "flex-end", gap: 8, marginTop: 10 },
   markPaidBtn:{ borderWidth: 1, borderColor: "#426900", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   markPaidText:{ fontSize: 10, fontWeight: "900", color: "#426900" },
-  viewBtn:    { width: 34, height: 34, backgroundColor: "#F9FAFB", borderRadius: 10, justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#F0F1EB" },
+  viewBtn:    { width: 34, height: 34, backgroundColor: "#f8f9fa", borderRadius: 10, justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
 
-  fab: { position: "absolute", bottom: 30, right: 24, width: 60, height: 60, borderRadius: 20, backgroundColor: "#1A1C19", justifyContent: "center", alignItems: "center", elevation: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
+  fab: { position: "absolute", bottom: 30, right: 24, width: 60, height: 60, borderRadius: 20, backgroundColor: "#000613", justifyContent: "center", alignItems: "center", elevation: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
 
   empty:     { alignItems: "center", marginTop: 60, gap: 8 },
   emptyText: { color: "#9CA3AF", fontWeight: "600" },

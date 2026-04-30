@@ -1,3 +1,4 @@
+import { C } from "../utils/theme";
 import React, { useState, useEffect } from "react";
 import {
   View, Text, ScrollView, Switch, TouchableOpacity,
@@ -88,7 +89,7 @@ export default function AvailabilityScreen() {
   };
 
   if (loading) {
-    return <View style={s.center}><ActivityIndicator size="large" color="#1A1C19" /></View>;
+    return <View style={s.center}><ActivityIndicator size="large" color="#000613" /></View>;
   }
 
   const activeCount = slots.filter(s => s.on).length;
@@ -156,7 +157,7 @@ export default function AvailabilityScreen() {
             <Switch
               value={slot.on}
               onValueChange={() => toggle(slot.day)}
-              trackColor={{ true: "#1A1C19", false: "#E5E7EB" }}
+              trackColor={{ true: "#000613", false: "#E5E7EB" }}
               thumbColor={slot.on ? "#ADFF2F" : "#9CA3AF"}
             />
 
@@ -205,37 +206,37 @@ export default function AvailabilityScreen() {
 }
 
 const s = StyleSheet.create({
-  root:      { flex: 1, backgroundColor: "#FBFDF8" },
+  root:      { flex: 1, backgroundColor: "#f8f9fa" },
   container: { paddingBottom: 100 },
   center:    { flex: 1, justifyContent: "center", alignItems: "center" },
 
-  statsRow: { flexDirection: "row", backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#F0F1EB", paddingVertical: 14 },
+  statsRow: { flexDirection: "row", backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "rgba(196,198,207,0.4)", paddingVertical: 14 },
   statBox:  { flex: 1, alignItems: "center" },
-  statValue:{ fontSize: 16, fontWeight: "900", color: "#1A1C19" },
+  statValue:{ fontSize: 16, fontWeight: "900", color: "#000613" },
   statLabel:{ fontSize: 8, fontWeight: "700", color: "#9CA3AF", marginTop: 2 },
 
   paramsRow: { flexDirection: "row", gap: 12, paddingHorizontal: 16, paddingVertical: 16 },
-  paramBox:  { flex: 1, backgroundColor: "#FFF", borderRadius: 16, padding: 14, borderWidth: 1, borderColor: "#F0F1EB" },
+  paramBox:  { flex: 1, backgroundColor: "#FFF", borderRadius: 16, padding: 14, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
   paramLabel:{ fontSize: 9, fontWeight: "900", color: "#9CA3AF", letterSpacing: 1, marginBottom: 10 },
   paramSelect:{ flexDirection: "row", gap: 6 },
-  durationBtn:      { flex: 1, paddingVertical: 8, borderRadius: 10, backgroundColor: "#F3F4EF", alignItems: "center" },
-  durationBtnActive:{ backgroundColor: "#1A1C19" },
+  durationBtn:      { flex: 1, paddingVertical: 8, borderRadius: 10, backgroundColor: "#f3f4f5", alignItems: "center" },
+  durationBtnActive:{ backgroundColor: "#000613" },
   durationText:     { fontSize: 11, fontWeight: "900", color: "#6B7280" },
   durationTextActive:{ color: "#FFF" },
   noticeRow:  { flexDirection: "row", alignItems: "center", gap: 8 },
-  noticeInput:{ flex: 1, backgroundColor: "#F3F4EF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 16, fontWeight: "900", color: "#1A1C19", textAlign: "center" },
+  noticeInput:{ flex: 1, backgroundColor: "#f3f4f5", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 16, fontWeight: "900", color: "#000613", textAlign: "center" },
   noticeUnit: { fontSize: 12, fontWeight: "700", color: "#9CA3AF" },
 
   sectionTitle: { fontSize: 11, fontWeight: "900", color: "#6B7280", letterSpacing: 1, marginLeft: 16, marginBottom: 8 },
-  scheduleCard: { backgroundColor: "#FFF", marginHorizontal: 16, borderRadius: 20, borderWidth: 1, borderColor: "#F0F1EB", overflow: "hidden", marginBottom: 16 },
+  scheduleCard: { backgroundColor: "#FFF", marginHorizontal: 16, borderRadius: 20, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)", overflow: "hidden", marginBottom: 16 },
   dayRow:       { flexDirection: "row", alignItems: "center", padding: 14, gap: 12 },
-  dayRowBorder: { borderTopWidth: 1, borderTopColor: "#F9FAFB" },
+  dayRowBorder: { borderTopWidth: 1, borderTopColor: "#f8f9fa" },
   dayRowOff:    { opacity: 0.5 },
   dayLeft:      { width: 80 },
-  dayName:      { fontSize: 14, fontWeight: "800", color: "#1A1C19" },
+  dayName:      { fontSize: 14, fontWeight: "800", color: "#000613" },
   unavailText:  { fontSize: 10, color: "#9CA3AF", marginTop: 2 },
   timeInputs:   { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
-  timeInput:    { flex: 1, backgroundColor: "#F3F4EF", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, fontSize: 13, fontWeight: "700", color: "#1A1C19", textAlign: "center" },
+  timeInput:    { flex: 1, backgroundColor: "#f3f4f5", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, fontSize: 13, fontWeight: "700", color: "#000613", textAlign: "center" },
   timeSep:      { fontSize: 14, color: "#9CA3AF", fontWeight: "700" },
 
   infoRow:  { flexDirection: "row", alignItems: "flex-start", gap: 10, marginHorizontal: 16, marginBottom: 20, backgroundColor: "#F0FDF4", padding: 14, borderRadius: 14 },
@@ -244,6 +245,6 @@ const s = StyleSheet.create({
   actionsRow: { flexDirection: "row", gap: 12, paddingHorizontal: 16, marginBottom: 40 },
   discardBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: 16, borderWidth: 1, borderColor: "#E5E7EB" },
   discardText:{ fontSize: 13, fontWeight: "900", color: "#6B7280" },
-  saveBtn:    { flex: 2, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: 16, backgroundColor: "#1A1C19" },
+  saveBtn:    { flex: 2, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: 16, backgroundColor: "#000613" },
   saveBtnText:{ fontSize: 13, fontWeight: "900", color: "#FFF" },
 });

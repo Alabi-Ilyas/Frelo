@@ -1,3 +1,4 @@
+import { C } from "../../utils/theme";
 import React, { useState, useEffect } from "react";
 import {
   Modal,
@@ -105,7 +106,7 @@ export default function CreateInvoiceModal({
                 </Text>
               </View>
               <TouchableOpacity onPress={onClose} style={styles.closeCircle}>
-                <X size={20} color="#1A1C19" />
+                <X size={20} color="#000613" />
               </TouchableOpacity>
             </View>
 
@@ -165,7 +166,7 @@ export default function CreateInvoiceModal({
 
               {selectedProject && (
                 <View style={styles.clientBanner}>
-                  <User size={12} color="#10B981" />
+                  <User size={12} color="#426900" />
                   <Text style={styles.bannerText}>
                     LINKED CLIENT:{" "}
                     <Text style={{ fontWeight: "900" }}>
@@ -242,7 +243,7 @@ export default function CreateInvoiceModal({
                   ])
                 }
               >
-                <Plus size={16} color="#10B981" />
+                <Plus size={16} color="#426900" />
                 <Text style={styles.addBtnText}>ADD NEW ITEM</Text>
               </TouchableOpacity>
 
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
   keyboardView: { width: "100%", height: "94%" },
   card: {
     flex: 1,
-    backgroundColor: "#FBFDF8",
+    backgroundColor: "#f8f9fa",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     padding: 24,
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 24,
   },
-  headerTitle: { fontSize: 22, fontWeight: "900", color: "#1A1C19" },
+  headerTitle: { fontSize: 22, fontWeight: "900", color: "#000613" },
   headerSubtitle: {
     fontSize: 9,
     fontWeight: "900",
@@ -330,7 +331,7 @@ const styles = StyleSheet.create({
   closeCircle: {
     width: 40,
     height: 40,
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
@@ -351,12 +352,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#FFF",
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
     marginRight: 10,
     gap: 8,
   },
-  activePill: { backgroundColor: "#1A1C19", borderColor: "#1A1C19" },
-  pillText: { fontSize: 12, fontWeight: "800", color: "#1A1C19" },
+  activePill: { backgroundColor: "#000613", borderColor: "#000613" },
+  pillText: { fontSize: 12, fontWeight: "800", color: "#000613" },
   activePillText: { color: "#FFF" },
   noProjects: {
     fontSize: 12,
@@ -373,19 +374,19 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10,
   },
-  bannerText: { fontSize: 10, color: "#10B981", fontWeight: "700" },
+  bannerText: { fontSize: 10, color: "#426900", fontWeight: "700" },
   itemCard: {
     backgroundColor: "#FFF",
     borderRadius: 20,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
   },
   itemInput: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1A1C19",
+    color: "#000613",
     marginBottom: 12,
   },
   itemMetaRow: { flexDirection: "row", alignItems: "center" },
@@ -396,19 +397,19 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   smallInput: {
-    backgroundColor: "#FBFDF8",
+    backgroundColor: "#f8f9fa",
     borderRadius: 8,
     padding: 8,
     fontSize: 12,
     fontWeight: "900",
     borderWidth: 1,
-    borderColor: "#F0F1EB",
-    color: "#1A1C19",
+    borderColor: "rgba(196,198,207,0.4)",
+    color: "#000613",
   },
-  rowTotal: { fontSize: 14, fontWeight: "900", color: "#1A1C19" },
+  rowTotal: { fontSize: 14, fontWeight: "900", color: "#000613" },
   trash: { marginLeft: 15, padding: 5 },
   addBtn: { flexDirection: "row", alignItems: "center", gap: 6, padding: 10 },
-  addBtnText: { fontSize: 10, fontWeight: "900", color: "#10B981" },
+  addBtnText: { fontSize: 10, fontWeight: "900", color: "#426900" },
   dueDateInput: {
     backgroundColor: "#FFF",
     borderRadius: 14,
@@ -416,14 +417,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 14,
     fontWeight: "700",
-    color: "#1A1C19",
+    color: "#000613",
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
     marginBottom: 4,
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: "#F0F1EB",
+    borderTopColor: "rgba(196,198,207,0.4)",
     paddingTop: 20,
     paddingBottom: Platform.OS === "ios" ? 30 : 10,
   },
@@ -434,10 +435,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   totalLabel: { fontSize: 10, fontWeight: "900", color: "#9CA3AF" },
-  taxNote: { fontSize: 11, fontWeight: "700", color: "#1A1C19" },
-  amount: { fontSize: 32, fontWeight: "900", color: "#1A1C19" },
+  taxNote: { fontSize: 11, fontWeight: "700", color: "#000613" },
+  amount: { fontSize: 32, fontWeight: "900", color: "#000613" },
   mainBtn: {
-    backgroundColor: "#1A1C19",
+    backgroundColor: "#000613",
     height: 60,
     borderRadius: 22,
     flexDirection: "row",

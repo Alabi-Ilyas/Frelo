@@ -32,7 +32,7 @@ export default function InvoiceDetailsModal({ visible, invoice, onClose }) {
               <Text style={styles.btnText}>Download PDF</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.iconBtn} onPress={onClose}>
-              <ChevronLeft size={20} color="#1A1C19" />
+              <ChevronLeft size={20} color="#000613" />
             </TouchableOpacity>
           </View>
         </View>
@@ -48,22 +48,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
-  card: { backgroundColor: "#FBFDF8", borderRadius: 32, padding: 32 },
+  card: { backgroundColor: "#f8f9fa", borderRadius: 32, padding: 32 },
   tag: { fontSize: 10, fontWeight: "900", color: "#9CA3AF", letterSpacing: 2 },
-  invNum: { fontSize: 24, fontWeight: "900", color: "#1A1C19", marginTop: 4 },
+  invNum: { fontSize: 24, fontWeight: "900", color: "#000613", marginTop: 4 },
   metaBox: {
     marginVertical: 32,
     padding: 24,
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     borderRadius: 24,
   },
   label: { fontSize: 10, fontWeight: "900", color: "#9CA3AF" },
-  value: { fontSize: 16, fontWeight: "700", color: "#1A1C19", marginTop: 4 },
-  amount: { fontSize: 32, fontWeight: "900", color: "#1A1C19", marginTop: 4 },
+  value: { fontSize: 16, fontWeight: "700", color: "#000613", marginTop: 4 },
+  amount: { fontSize: 32, fontWeight: "900", color: "#000613", marginTop: 4 },
   btnRow: { flexDirection: "row", gap: 12 },
   mainBtn: {
     flex: 1,
-    backgroundColor: "#1A1C19",
+    backgroundColor: "#000613",
     height: 60,
     borderRadius: 20,
     flexDirection: "row",
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#FFF",
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
     justifyContent: "center",
     alignItems: "center",
   },

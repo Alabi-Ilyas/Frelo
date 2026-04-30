@@ -1,3 +1,4 @@
+import { C } from "../../utils/theme";
 import React, { useState } from "react";
 import {
   Modal,
@@ -69,7 +70,7 @@ export default function CreateProjectModal({
           <View style={styles.header}>
             <Text style={styles.headerTitle}>LAUNCH PROJECT</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeCircle}>
-              <X size={20} color="#1A1C19" />
+              <X size={20} color="#000613" />
             </TouchableOpacity>
           </View>
 
@@ -78,7 +79,7 @@ export default function CreateProjectModal({
             <View style={styles.inputLabelGroup}>
               <Text style={styles.inputLabel}>PROJECT NAME</Text>
               <View style={styles.nameInputWrapper}>
-                <Folder size={20} color="#10B981" />
+                <Folder size={20} color="#426900" />
                 <TextInput
                   style={styles.mainInput}
                   placeholder="e.g. Lagos Office App"
@@ -116,7 +117,7 @@ export default function CreateProjectModal({
                 >
                   <User
                     size={16}
-                    color={form.clientId ? "#10B981" : "#6B7280"}
+                    color={form.clientId ? "#426900" : "#6B7280"}
                   />
                   <Text style={styles.selectorText} numberOfLines={1}>
                     {selectedClientName}
@@ -152,7 +153,7 @@ export default function CreateProjectModal({
                   >
                     <Text style={styles.pickerItemText}>{client.name}</Text>
                     {form.clientId === client._id && (
-                      <Check size={16} color="#10B981" />
+                      <Check size={16} color="#426900" />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalCard: {
-    backgroundColor: "#FBFDF8",
+    backgroundColor: "#f8f9fa",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     padding: 24,
@@ -230,7 +231,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   nameInputWrapper: { flexDirection: "row", alignItems: "center", gap: 12 },
-  mainInput: { flex: 1, fontSize: 20, fontWeight: "700", color: "#1A1C19" },
+  mainInput: { flex: 1, fontSize: 20, fontWeight: "700", color: "#000613" },
   row: { flexDirection: "row", gap: 12, marginBottom: 20 },
   flex1: { flex: 1 },
   selectorChip: {
@@ -254,12 +255,12 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
   },
-  activeChip: { borderColor: "#10B981" },
-  selectorText: { fontSize: 13, fontWeight: "600", color: "#1A1C19" },
+  activeChip: { borderColor: "#426900" },
+  selectorText: { fontSize: 13, fontWeight: "600", color: "#000613" },
   pickerDropdown: {
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     borderRadius: 16,
     padding: 8,
     marginBottom: 20,
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
   },
-  pickerItemText: { fontSize: 13, fontWeight: "700", color: "#1A1C19" },
+  pickerItemText: { fontSize: 13, fontWeight: "700", color: "#000613" },
   rowInput: {
     flexDirection: "row",
     alignItems: "center",
@@ -279,17 +280,17 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
   },
   flexInput: {
     flex: 1,
     marginLeft: 8,
     fontWeight: "700",
     fontSize: 14,
-    color: "#1A1C19",
+    color: "#000613",
   },
   saveBtn: {
-    backgroundColor: "#1A1C19",
+    backgroundColor: "#000613",
     height: 58,
     borderRadius: 20,
     justifyContent: "center",

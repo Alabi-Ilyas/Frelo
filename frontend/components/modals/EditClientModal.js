@@ -1,3 +1,4 @@
+import { C } from "../../utils/theme";
 import React, { useState, useEffect } from "react";
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
@@ -5,7 +6,7 @@ import {
 } from "react-native";
 import { X, User, Mail, Phone } from "lucide-react-native";
 
-const COLORS = ["#D7E8CD", "#FFEBB7", "#E2D9F3", "#FCE2E1", "#D1E9F6", "#7C6EF8"];
+const COLORS = ["#ADFF2F", "#FFEBB7", "#E2D9F3", "#FCE2E1", "#D1E9F6", "#7C6EF8"];
 
 export default function EditClientModal({ visible, client, onClose, onSave }) {
   const [form, setForm] = useState({ name: "", email: "", phone: "", color: COLORS[0], notes: "" });
@@ -39,7 +40,7 @@ export default function EditClientModal({ visible, client, onClose, onSave }) {
           <View style={s.header}>
             <Text style={s.title}>EDIT CLIENT</Text>
             <TouchableOpacity onPress={onClose} style={s.closeBtn}>
-              <X size={20} color="#1A1C19" />
+              <X size={20} color="#000613" />
             </TouchableOpacity>
           </View>
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -93,16 +94,16 @@ export default function EditClientModal({ visible, client, onClose, onSave }) {
 
 const s = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(26,28,25,0.6)", justifyContent: "flex-end" },
-  card:    { backgroundColor: "#FBFDF8", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: "85%" },
+  card:    { backgroundColor: "#f8f9fa", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: "85%" },
   header:  { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
   title:   { fontSize: 10, fontWeight: "900", letterSpacing: 2, color: "#6B7280" },
-  closeBtn:{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#F0F1EB", justifyContent: "center", alignItems: "center" },
+  closeBtn:{ width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(196,198,207,0.4)", justifyContent: "center", alignItems: "center" },
   label:   { fontSize: 9, fontWeight: "900", color: "#9CA3AF", marginBottom: 8, marginTop: 16, letterSpacing: 1 },
-  inputRow:{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#FFF", padding: 14, borderRadius: 14, borderWidth: 1, borderColor: "#F0F1EB" },
-  input:   { flex: 1, fontSize: 14, fontWeight: "700", color: "#1A1C19" },
+  inputRow:{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#FFF", padding: 14, borderRadius: 14, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
+  input:   { flex: 1, fontSize: 14, fontWeight: "700", color: "#000613" },
   colorRow:{ flexDirection: "row", gap: 10, marginTop: 4 },
   colorCircle: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: "transparent" },
-  colorSelected: { borderColor: "#1A1C19" },
-  saveBtn: { backgroundColor: "#1A1C19", height: 56, borderRadius: 18, justifyContent: "center", alignItems: "center", marginTop: 24, marginBottom: 20 },
+  colorSelected: { borderColor: "#000613" },
+  saveBtn: { backgroundColor: "#000613", height: 56, borderRadius: 18, justifyContent: "center", alignItems: "center", marginTop: 24, marginBottom: 20 },
   saveBtnText: { color: "#FFF", fontSize: 15, fontWeight: "800" },
 });

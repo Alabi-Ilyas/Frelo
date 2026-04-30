@@ -1,3 +1,4 @@
+import { C } from "../../utils/theme";
 import React from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { X, CheckCircle2 } from "lucide-react-native";
@@ -15,7 +16,7 @@ export default function InvoiceDetailModal({ visible, invoice, onClose, onMarkPa
           <View style={s.header}>
             <Text style={s.tag}>INVOICE DETAILS</Text>
             <TouchableOpacity onPress={onClose} style={s.closeBtn}>
-              <X size={20} color="#1A1C19" />
+              <X size={20} color="#000613" />
             </TouchableOpacity>
           </View>
 
@@ -115,13 +116,13 @@ export default function InvoiceDetailModal({ visible, invoice, onClose, onMarkPa
 
 const s = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(26,28,25,0.7)", justifyContent: "flex-end" },
-  card:    { backgroundColor: "#FBFDF8", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: "92%" },
+  card:    { backgroundColor: "#f8f9fa", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: "92%" },
   header:  { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
   tag:     { fontSize: 10, fontWeight: "900", letterSpacing: 2, color: "#9CA3AF" },
-  closeBtn:{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#F0F1EB", justifyContent: "center", alignItems: "center" },
+  closeBtn:{ width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(196,198,207,0.4)", justifyContent: "center", alignItems: "center" },
 
   topRow:     { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 },
-  invNum:     { fontSize: 22, fontWeight: "900", color: "#1A1C19" },
+  invNum:     { fontSize: 22, fontWeight: "900", color: "#000613" },
   invClient:  { fontSize: 14, fontWeight: "700", color: "#6B7280", marginTop: 4 },
   statusBadge:{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12 },
   paidBadge:  { backgroundColor: "#F0FDF4" },
@@ -129,17 +130,17 @@ const s = StyleSheet.create({
   statusText: { fontSize: 10, fontWeight: "900" },
 
   datesRow: { flexDirection: "row", gap: 12, marginBottom: 20 },
-  dateBox:  { flex: 1, backgroundColor: "#FFF", borderRadius: 14, padding: 12, borderWidth: 1, borderColor: "#F0F1EB" },
+  dateBox:  { flex: 1, backgroundColor: "#FFF", borderRadius: 14, padding: 12, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
   dateLabel:{ fontSize: 9, fontWeight: "900", color: "#9CA3AF", marginBottom: 4 },
-  dateValue:{ fontSize: 12, fontWeight: "700", color: "#1A1C19" },
+  dateValue:{ fontSize: 12, fontWeight: "700", color: "#000613" },
 
   sectionTitle: { fontSize: 10, fontWeight: "900", color: "#9CA3AF", letterSpacing: 1, marginBottom: 8 },
-  itemsHeader:  { flexDirection: "row", paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: "#F0F1EB", marginBottom: 4 },
+  itemsHeader:  { flexDirection: "row", paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: "rgba(196,198,207,0.4)", marginBottom: 4 },
   itemCol:      { fontSize: 9, fontWeight: "900", color: "#9CA3AF" },
-  itemRow:      { flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F9FAFB" },
-  itemText:     { fontSize: 13, fontWeight: "600", color: "#1A1C19" },
+  itemRow:      { flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f8f9fa" },
+  itemText:     { fontSize: 13, fontWeight: "600", color: "#000613" },
 
-  totalsBox: { backgroundColor: "#1A1C19", borderRadius: 20, padding: 20, marginTop: 16, marginBottom: 16 },
+  totalsBox: { backgroundColor: "#000613", borderRadius: 20, padding: 20, marginTop: 16, marginBottom: 16 },
   totalRow:  { flexDirection: "row", justifyContent: "space-between", paddingVertical: 6 },
   totalLabel:{ fontSize: 11, fontWeight: "700", color: "rgba(255,255,255,0.5)" },
   totalValue:{ fontSize: 13, fontWeight: "700", color: "#FFF" },
@@ -147,12 +148,12 @@ const s = StyleSheet.create({
   grandLabel:{ fontSize: 11, fontWeight: "900", color: "rgba(255,255,255,0.5)", letterSpacing: 1 },
   grandValue:{ fontSize: 28, fontWeight: "900", color: "#FFF" },
 
-  notesBox:  { backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#F0F1EB" },
+  notesBox:  { backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)" },
   notesLabel:{ fontSize: 9, fontWeight: "900", color: "#9CA3AF", marginBottom: 6 },
   notesText: { fontSize: 13, color: "#6B7280", lineHeight: 18 },
 
   actions:      { gap: 10, marginBottom: 20 },
-  markPaidBtn:  { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: "#1A1C19", height: 56, borderRadius: 18 },
+  markPaidBtn:  { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: "#000613", height: 56, borderRadius: 18 },
   markPaidText: { color: "#FFF", fontWeight: "900", fontSize: 13, letterSpacing: 1 },
   closeAction:  { alignItems: "center", paddingVertical: 14 },
   closeActionText: { fontSize: 13, fontWeight: "700", color: "#9CA3AF" },

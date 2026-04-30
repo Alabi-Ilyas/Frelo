@@ -1,3 +1,4 @@
+import { C } from "../utils/theme";
 import React, { useState, useCallback } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
@@ -141,7 +142,7 @@ export default function TasksScreen() {
       {!loading && (
         <View style={s.statsRow}>
           {[
-            { label: "Total",       value: stats.total,      icon: LayoutGrid,   color: "#1A1C19" },
+            { label: "Total",       value: stats.total,      icon: LayoutGrid,   color: "#000613" },
             { label: "In Progress", value: stats.inProgress, icon: Clock,        color: "#2563EB" },
             { label: "Overdue",     value: stats.overdue,    icon: AlertCircle,  color: "#EF4444" },
             { label: "Done",        value: stats.done,       icon: CheckCircle2, color: "#16A34A" },
@@ -169,7 +170,7 @@ export default function TasksScreen() {
       </View>
 
       {loading ? (
-        <View style={s.center}><ActivityIndicator color="#1A1C19" /></View>
+        <View style={s.center}><ActivityIndicator color="#000613" /></View>
       ) : (
         <FlatList
           data={tasks}
@@ -185,7 +186,7 @@ export default function TasksScreen() {
           }
           ListEmptyComponent={
             <View style={s.empty}>
-              <LayoutGrid size={48} color="#E2E3DD" />
+              <LayoutGrid size={48} color="#e6e8ea" />
               <Text style={s.emptyText}>No tasks found.</Text>
             </View>
           }
@@ -208,13 +209,13 @@ export default function TasksScreen() {
 }
 
 const s = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: "#FBFDF8" },
+  root:   { flex: 1, backgroundColor: "#f8f9fa" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   list:   { paddingHorizontal: 16, paddingBottom: 100 },
 
   statsRow: {
     flexDirection: "row", paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#F0F1EB",
+    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "rgba(196,198,207,0.4)",
   },
   statBox:  { flex: 1, alignItems: "center", gap: 2 },
   statValue:{ fontSize: 16, fontWeight: "900" },
@@ -222,30 +223,30 @@ const s = StyleSheet.create({
 
   filterRow: {
     flexDirection: "row", paddingHorizontal: 8, paddingVertical: 8,
-    backgroundColor: "#F3F4EF", gap: 4,
+    backgroundColor: "#f3f4f5", gap: 4,
   },
   filterTab:       { flex: 1, paddingVertical: 7, alignItems: "center", borderRadius: 10 },
   filterTabActive: { backgroundColor: "#FFF" },
   filterText:      { fontSize: 9, fontWeight: "900", color: "#9CA3AF" },
-  filterTextActive:{ color: "#1A1C19" },
+  filterTextActive:{ color: "#000613" },
 
   card: {
     flexDirection: "row", alignItems: "flex-start",
     backgroundColor: "#FFF", borderRadius: 18, padding: 14,
-    marginBottom: 10, borderWidth: 1, borderColor: "#F0F1EB", gap: 10,
+    marginBottom: 10, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)", gap: 10,
   },
   cardDone: { opacity: 0.6 },
 
   dotBtn: { paddingTop: 3 },
   dot:    { width: 10, height: 10, borderRadius: 5 },
 
-  taskText: { fontSize: 14, fontWeight: "700", color: "#1A1C19", lineHeight: 20 },
+  taskText: { fontSize: 14, fontWeight: "700", color: "#000613", lineHeight: 20 },
   taskDone: { textDecorationLine: "line-through", opacity: 0.5 },
 
   metaRow:      { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
   badge:        { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   badgeText:    { fontSize: 9, fontWeight: "900" },
-  projectBadge: { backgroundColor: "#1A1C19", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  projectBadge: { backgroundColor: "#000613", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   projectBadgeText: { fontSize: 9, fontWeight: "900", color: "#FFF" },
   dueRow:       { flexDirection: "row", alignItems: "center", gap: 3 },
   dueText:      { fontSize: 10, fontWeight: "700", color: "#9CA3AF" },
@@ -255,7 +256,7 @@ const s = StyleSheet.create({
   fab: {
     position: "absolute", bottom: 30, right: 24,
     width: 60, height: 60, borderRadius: 20,
-    backgroundColor: "#1A1C19", justifyContent: "center", alignItems: "center",
+    backgroundColor: "#000613", justifyContent: "center", alignItems: "center",
     elevation: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 8,
   },

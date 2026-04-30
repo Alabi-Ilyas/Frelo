@@ -1,3 +1,4 @@
+import { C } from "../../utils/theme";
 import React from "react";
 import {
   Modal, View, Text, TouchableOpacity, StyleSheet,
@@ -12,7 +13,7 @@ const STATUS_STYLE = {
   Confirmed: { bg: "#F0FDF4", text: "#16A34A" },
   Pending:   { bg: "#FFFBEB", text: "#D97706" },
   Cancelled: { bg: "#FEF2F2", text: "#EF4444" },
-  Completed: { bg: "#F9FAFB", text: "#6B7280" },
+  Completed: { bg: "#f8f9fa", text: "#6B7280" },
   "No-show": { bg: "#FEF2F2", text: "#F87171" },
 };
 
@@ -60,7 +61,7 @@ export default function AppointmentDetailModal({
             <View style={s.infoCard}>
               {/* Date */}
               <View style={s.infoRow}>
-                <View style={s.infoIcon}><Calendar size={16} color="#1A1C19" /></View>
+                <View style={s.infoIcon}><Calendar size={16} color="#000613" /></View>
                 <View>
                   <Text style={s.infoLabel}>Date</Text>
                   <Text style={s.infoValue}>{formatted}</Text>
@@ -69,7 +70,7 @@ export default function AppointmentDetailModal({
 
               {/* Time */}
               <View style={[s.infoRow, s.infoRowBorder]}>
-                <View style={s.infoIcon}><Clock size={16} color="#1A1C19" /></View>
+                <View style={s.infoIcon}><Clock size={16} color="#000613" /></View>
                 <View>
                   <Text style={s.infoLabel}>Time</Text>
                   <Text style={s.infoValue}>
@@ -81,7 +82,7 @@ export default function AppointmentDetailModal({
 
               {/* Client */}
               <View style={[s.infoRow, s.infoRowBorder]}>
-                <View style={s.infoIcon}><User size={16} color="#1A1C19" /></View>
+                <View style={s.infoIcon}><User size={16} color="#000613" /></View>
                 <View>
                   <Text style={s.infoLabel}>Client</Text>
                   <Text style={s.infoValue}>{appointment.clientId?.name ?? "—"}</Text>
@@ -104,7 +105,7 @@ export default function AppointmentDetailModal({
               {/* Notes */}
               {appointment.notes && (
                 <View style={[s.infoRow, s.infoRowBorder]}>
-                  <View style={s.infoIcon}><FileText size={16} color="#1A1C19" /></View>
+                  <View style={s.infoIcon}><FileText size={16} color="#000613" /></View>
                   <View style={{ flex: 1 }}>
                     <Text style={s.infoLabel}>Notes</Text>
                     <Text style={s.infoValue}>{appointment.notes}</Text>
@@ -175,9 +176,9 @@ export default function AppointmentDetailModal({
 
 const s = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(26,28,25,0.5)", justifyContent: "flex-end" },
-  card:    { backgroundColor: "#FBFDF8", borderTopLeftRadius: 32, borderTopRightRadius: 32, maxHeight: "90%", paddingBottom: 32 },
-  accentBar: { height: 4, backgroundColor: "#1A1C19", borderTopLeftRadius: 32, borderTopRightRadius: 32 },
-  closeBtn:  { position: "absolute", top: 16, right: 20, width: 36, height: 36, borderRadius: 18, backgroundColor: "#F0F1EB", justifyContent: "center", alignItems: "center", zIndex: 10 },
+  card:    { backgroundColor: "#f8f9fa", borderTopLeftRadius: 32, borderTopRightRadius: 32, maxHeight: "90%", paddingBottom: 32 },
+  accentBar: { height: 4, backgroundColor: "#000613", borderTopLeftRadius: 32, borderTopRightRadius: 32 },
+  closeBtn:  { position: "absolute", top: 16, right: 20, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(196,198,207,0.4)", justifyContent: "center", alignItems: "center", zIndex: 10 },
   content:   { padding: 24, paddingTop: 16 },
 
   header:    { marginBottom: 16 },
@@ -185,19 +186,19 @@ const s = StyleSheet.create({
   tagline:   { fontSize: 10, fontWeight: "900", color: "#9CA3AF", letterSpacing: 2 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
   statusText:  { fontSize: 9, fontWeight: "900" },
-  title:     { fontSize: 22, fontWeight: "900", color: "#1A1C19", letterSpacing: -0.5 },
+  title:     { fontSize: 22, fontWeight: "900", color: "#000613", letterSpacing: -0.5 },
 
-  infoCard:    { backgroundColor: "#FFF", borderRadius: 20, borderWidth: 1, borderColor: "#F0F1EB", marginBottom: 20, overflow: "hidden" },
+  infoCard:    { backgroundColor: "#FFF", borderRadius: 20, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)", marginBottom: 20, overflow: "hidden" },
   infoRow:     { flexDirection: "row", alignItems: "flex-start", gap: 12, padding: 14 },
-  infoRowBorder: { borderTopWidth: 1, borderTopColor: "#F9FAFB" },
-  infoIcon:    { width: 34, height: 34, borderRadius: 10, backgroundColor: "#F3F4EF", justifyContent: "center", alignItems: "center" },
+  infoRowBorder: { borderTopWidth: 1, borderTopColor: "#f8f9fa" },
+  infoIcon:    { width: 34, height: 34, borderRadius: 10, backgroundColor: "#f3f4f5", justifyContent: "center", alignItems: "center" },
   infoLabel:   { fontSize: 9, fontWeight: "900", color: "#9CA3AF", letterSpacing: 1, marginBottom: 3 },
-  infoValue:   { fontSize: 14, fontWeight: "700", color: "#1A1C19" },
+  infoValue:   { fontSize: 14, fontWeight: "700", color: "#000613" },
   infoSub:     { fontSize: 12, fontWeight: "500", color: "#9CA3AF" },
   linkText:    { fontSize: 13, fontWeight: "700", color: "#426900", textDecorationLine: "underline" },
 
   actions:     { gap: 10 },
-  joinBtn:     { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: "#1A1C19", height: 54, borderRadius: 18 },
+  joinBtn:     { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: "#000613", height: 54, borderRadius: 18 },
   joinBtnText: { color: "#FFF", fontWeight: "900", fontSize: 13, letterSpacing: 1 },
 
   completeRow:    { flexDirection: "row", gap: 10 },

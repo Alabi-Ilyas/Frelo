@@ -1,3 +1,4 @@
+import { C } from "../../utils/theme";
 import React, { useState } from "react";
 import {
   Modal,
@@ -13,7 +14,7 @@ import {
 import { X, User, Mail, Phone, Palette } from "lucide-react-native";
 
 // Professional color palette for avatars
-const AVATAR_COLORS = ["#D7E8CD", "#FFEBB7", "#E2D9F3", "#FCE2E1", "#D1E9F6"];
+const AVATAR_COLORS = ["#ADFF2F", "#FFEBB7", "#E2D9F3", "#FCE2E1", "#D1E9F6"];
 
 export default function AddClientModal({ visible, onClose, onSave }) {
   const [form, setForm] = useState({
@@ -50,7 +51,7 @@ export default function AddClientModal({ visible, onClose, onSave }) {
           <View style={styles.header}>
             <Text style={styles.headerTitle}>ADD NEW CLIENT</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeCircle}>
-              <X size={20} color="#1A1C19" />
+              <X size={20} color="#000613" />
             </TouchableOpacity>
           </View>
 
@@ -59,7 +60,7 @@ export default function AddClientModal({ visible, onClose, onSave }) {
             <View style={styles.inputLabelGroup}>
               <Text style={styles.inputLabel}>FULL NAME</Text>
               <View style={styles.inputWrapper}>
-                <User size={20} color="#10B981" />
+                <User size={20} color="#426900" />
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g. John Doe"
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalCard: {
-    backgroundColor: "#FBFDF8",
+    backgroundColor: "#f8f9fa",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     padding: 24,
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -183,9 +184,9 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
   },
-  textInput: { flex: 1, fontSize: 15, fontWeight: "700", color: "#1A1C19" },
+  textInput: { flex: 1, fontSize: 15, fontWeight: "700", color: "#000613" },
 
   colorRow: { flexDirection: "row", gap: 12, marginTop: 4 },
   colorCircle: {
@@ -195,10 +196,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "transparent",
   },
-  selectedColor: { borderColor: "#1A1C19" },
+  selectedColor: { borderColor: "#000613" },
 
   saveBtn: {
-    backgroundColor: "#1A1C19",
+    backgroundColor: "#000613",
     height: 58,
     borderRadius: 20,
     justifyContent: "center",

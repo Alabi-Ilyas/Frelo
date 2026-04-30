@@ -1,3 +1,4 @@
+import { C } from "../utils/theme";
 import React, { useState, useCallback } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
@@ -19,7 +20,7 @@ const TYPE_CFG = {
   project:     { icon: GitMerge,     bg: "#EFF6FF", color: "#2563EB" },
   appointment: { icon: CalendarDays, bg: "#F5F3FF", color: "#7C3AED" },
   security:    { icon: ShieldCheck,  bg: "#FEF2F2", color: "#EF4444" },
-  system:      { icon: Info,         bg: "#F9FAFB", color: "#6B7280" },
+  system:      { icon: Info,         bg: "#f8f9fa", color: "#6B7280" },
 };
 
 function timeAgo(dateStr) {
@@ -130,7 +131,7 @@ export default function NotificationScreen() {
         rightElement={
           unreadCount > 0 ? (
             <TouchableOpacity onPress={handleMarkAll} style={s.markAllBtn}>
-              <CheckCheck size={18} color="#1A1C19" />
+              <CheckCheck size={18} color="#000613" />
             </TouchableOpacity>
           ) : null
         }
@@ -152,7 +153,7 @@ export default function NotificationScreen() {
       </View>
 
       {loading ? (
-        <View style={s.center}><ActivityIndicator color="#1A1C19" /></View>
+        <View style={s.center}><ActivityIndicator color="#000613" /></View>
       ) : (
         <FlatList
           data={notifications}
@@ -169,11 +170,11 @@ export default function NotificationScreen() {
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.3}
           ListFooterComponent={
-            loadingMore ? <ActivityIndicator color="#1A1C19" style={{ marginVertical: 16 }} /> : null
+            loadingMore ? <ActivityIndicator color="#000613" style={{ marginVertical: 16 }} /> : null
           }
           ListEmptyComponent={
             <View style={s.empty}>
-              <Bell size={48} color="#E2E3DD" />
+              <Bell size={48} color="#e6e8ea" />
               <Text style={s.emptyText}>Your inbox is quiet.</Text>
             </View>
           }
@@ -184,33 +185,33 @@ export default function NotificationScreen() {
 }
 
 const s = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: "#FBFDF8" },
+  root:   { flex: 1, backgroundColor: "#f8f9fa" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   list:   { paddingHorizontal: 16, paddingBottom: 100 },
 
-  markAllBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: "#F3F4EF", justifyContent: "center", alignItems: "center" },
+  markAllBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: "#f3f4f5", justifyContent: "center", alignItems: "center" },
 
-  filterRow: { flexDirection: "row", paddingHorizontal: 12, paddingVertical: 8, gap: 6, borderBottomWidth: 1, borderBottomColor: "#F0F1EB" },
-  filterTab:       { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: "#F3F4EF" },
-  filterTabActive: { backgroundColor: "#1A1C19" },
+  filterRow: { flexDirection: "row", paddingHorizontal: 12, paddingVertical: 8, gap: 6, borderBottomWidth: 1, borderBottomColor: "rgba(196,198,207,0.4)" },
+  filterTab:       { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: "#f3f4f5" },
+  filterTabActive: { backgroundColor: "#000613" },
   filterText:      { fontSize: 10, fontWeight: "900", color: "#9CA3AF" },
   filterTextActive:{ color: "#FFF" },
 
   card: {
     flexDirection: "row", padding: 14, borderRadius: 18,
     backgroundColor: "#FFF", marginBottom: 10,
-    borderWidth: 1, borderColor: "#F0F1EB", gap: 12,
+    borderWidth: 1, borderColor: "rgba(196,198,207,0.4)", gap: 12,
   },
-  cardUnread: { backgroundColor: "#F3FBF4", borderColor: "#D7E8CD" },
+  cardUnread: { backgroundColor: "#F3FBF4", borderColor: "#ADFF2F" },
   iconBox:    { width: 40, height: 40, borderRadius: 12, justifyContent: "center", alignItems: "center" },
   content:    { flex: 1 },
   notifHeader:{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 },
   notifTitle: { fontSize: 14, fontWeight: "700", color: "#6B7280", flex: 1, marginRight: 8 },
-  notifTitleUnread: { color: "#1A1C19", fontWeight: "800" },
+  notifTitleUnread: { color: "#000613", fontWeight: "800" },
   timeText:   { fontSize: 10, fontWeight: "700", color: "#9CA3AF" },
   notifMessage: { fontSize: 13, color: "#6B7280", lineHeight: 18, marginBottom: 8 },
   notifActions: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  markReadText: { fontSize: 11, fontWeight: "900", color: "#1A1C19" },
+  markReadText: { fontSize: 11, fontWeight: "900", color: "#000613" },
   deleteBtn:    { padding: 4 },
   unreadDot:    { width: 8, height: 8, borderRadius: 4, position: "absolute", top: 14, right: 14 },
 

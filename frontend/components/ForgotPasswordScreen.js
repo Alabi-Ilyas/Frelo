@@ -40,7 +40,7 @@ export default function ForgotPassword({ navigation }) {
         <StatusBar style="dark" />
 
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={20} color="#1A1C19" />
+          <ArrowLeft size={20} color="#000613" />
         </TouchableOpacity>
 
         <View style={s.header}>
@@ -81,22 +81,22 @@ export default function ForgotPassword({ navigation }) {
 }
 
 const s = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: "#FBFDF8", padding: 24, justifyContent: "center" },
-  backBtn:   { width: 44, height: 44, borderRadius: 12, backgroundColor: "#F3F4EF", justifyContent: "center", alignItems: "center", marginBottom: 32 },
+  container: { flexGrow: 1, backgroundColor: "#f8f9fa", padding: 24, justifyContent: "center" },
+  backBtn:   { width: 44, height: 44, borderRadius: 12, backgroundColor: "#f3f4f5", justifyContent: "center", alignItems: "center", marginBottom: 32 },
   header:    { marginBottom: 36 },
   tagline:   { fontSize: 10, fontWeight: "900", letterSpacing: 2, color: "#6B7280", marginBottom: 4 },
-  heading:   { fontSize: 32, fontWeight: "900", color: "#1A1C19", letterSpacing: -1 },
+  heading:   { fontSize: 32, fontWeight: "900", color: "#000613", letterSpacing: -1 },
   subheading:{ fontSize: 14, color: "#6B7280", marginTop: 8, lineHeight: 20 },
-  label:     { fontSize: 10, fontWeight: "900", color: "#1A1C19", marginBottom: 8, letterSpacing: 1 },
+  label:     { fontSize: 10, fontWeight: "900", color: "#000613", marginBottom: 8, letterSpacing: 1 },
   inputWrapper: {
     flexDirection: "row", alignItems: "center", gap: 12,
     backgroundColor: "#FFF", borderRadius: 16, height: 56,
-    paddingHorizontal: 16, borderWidth: 1, borderColor: "#F0F1EB", marginBottom: 32,
+    paddingHorizontal: 16, borderWidth: 1, borderColor: "rgba(196,198,207,0.4)", marginBottom: 32,
   },
-  input:     { flex: 1, fontSize: 15, color: "#1A1C19", fontWeight: "500" },
-  button:    { backgroundColor: "#1A1C19", height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
+  input:     { flex: 1, fontSize: 15, color: "#000613", fontWeight: "500" },
+  button:    { backgroundColor: "#000613", height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
   buttonText:{ color: "#fff", fontSize: 14, fontWeight: "900", letterSpacing: 2 },
   footer:    { marginTop: 32, alignItems: "center" },
   footerText:{ fontSize: 11, fontWeight: "900", color: "#6B7280", letterSpacing: 1 },
-  link:      { color: "#1A1C19" },
+  link:      { color: "#000613" },
 });

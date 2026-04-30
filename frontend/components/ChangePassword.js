@@ -10,7 +10,7 @@ export default function ChangePassword({ navigation }) {
     <View style={s.container}>
       <StatusBar style="dark" />
       <TouchableOpacity style={s.backBtn} onPress={() => navigation.navigate("SignIn")}>
-        <ArrowLeft size={20} color="#1A1C19" />
+        <ArrowLeft size={20} color="#000613" />
       </TouchableOpacity>
       <Text style={s.heading}>Change Password</Text>
       <Text style={s.body}>
@@ -24,10 +24,10 @@ export default function ChangePassword({ navigation }) {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: "center", backgroundColor: "#FBFDF8" },
-  backBtn:   { width: 44, height: 44, borderRadius: 12, backgroundColor: "#F3F4EF", justifyContent: "center", alignItems: "center", marginBottom: 32 },
-  heading:   { fontSize: 28, fontWeight: "900", color: "#1A1C19", letterSpacing: -1, marginBottom: 12 },
+  container: { flex: 1, padding: 24, justifyContent: "center", backgroundColor: "#f8f9fa" },
+  backBtn:   { width: 44, height: 44, borderRadius: 12, backgroundColor: "#f3f4f5", justifyContent: "center", alignItems: "center", marginBottom: 32 },
+  heading:   { fontSize: 28, fontWeight: "900", color: "#000613", letterSpacing: -1, marginBottom: 12 },
   body:      { fontSize: 15, color: "#6B7280", lineHeight: 22, marginBottom: 32 },
-  button:    { backgroundColor: "#1A1C19", height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
+  button:    { backgroundColor: "#000613", height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
   buttonText:{ color: "#fff", fontSize: 14, fontWeight: "900", letterSpacing: 2 },
 });

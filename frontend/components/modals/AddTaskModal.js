@@ -1,3 +1,4 @@
+import { C } from "../../utils/theme";
 import React, { useState } from "react";
 import {
   Modal,
@@ -79,7 +80,7 @@ export default function AddTaskModal({
               <Text style={styles.tagline}>NEW MILESTONE</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeCircle}>
-              <X size={24} color="#1A1C19" />
+              <X size={24} color="#000613" />
             </TouchableOpacity>
           </View>
 
@@ -93,7 +94,7 @@ export default function AddTaskModal({
               >
                 <Briefcase
                   size={18}
-                  color={selectedProjectId ? "#10B981" : "#9CA3AF"}
+                  color={selectedProjectId ? "#426900" : "#9CA3AF"}
                 />
                 <Text
                   style={[
@@ -117,7 +118,7 @@ export default function AddTaskModal({
                     >
                       <Text style={styles.dropdownItemText}>{p.name}</Text>
                       {selectedProjectId === p._id && (
-                        <Check size={16} color="#10B981" />
+                        <Check size={16} color="#426900" />
                       )}
                     </TouchableOpacity>
                   ))}
@@ -152,7 +153,7 @@ export default function AddTaskModal({
                       gap: 8,
                     }}
                   >
-                    <CalendarIcon size={14} color="#1A1C19" />
+                    <CalendarIcon size={14} color="#000613" />
                     <Text style={styles.gridInputText}>
                       {due.toDateString()}
                     </Text>
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalCard: {
-    backgroundColor: "#FBFDF8",
+    backgroundColor: "#f8f9fa",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     padding: 32,
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: "900",
-    color: "#1A1C19",
+    color: "#000613",
     letterSpacing: -1,
   },
   tagline: {
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 15,
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -271,18 +272,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     padding: 18,
     borderRadius: 20,
   },
   projectSelectorText: { fontSize: 12, fontWeight: "900", color: "#9CA3AF" },
-  activeProjectText: { color: "#1A1C19" },
+  activeProjectText: { color: "#000613" },
   dropdown: {
     backgroundColor: "#FFF",
     borderRadius: 20,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: "#F0F1EB",
+    borderColor: "rgba(196,198,207,0.4)",
     padding: 8,
     maxHeight: 150,
   },
@@ -291,27 +292,27 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#FBFDF8",
+    borderBottomColor: "#f8f9fa",
   },
-  dropdownItemText: { fontSize: 13, fontWeight: "700", color: "#1A1C19" },
+  dropdownItemText: { fontSize: 13, fontWeight: "700", color: "#000613" },
   mainInput: {
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     borderRadius: 20,
     padding: 18,
     fontSize: 14,
     fontWeight: "800",
-    color: "#1A1C19",
+    color: "#000613",
   },
   grid: { flexDirection: "row", gap: 12, marginBottom: 24 },
   gridInput: {
-    backgroundColor: "#F0F1EB",
+    backgroundColor: "rgba(196,198,207,0.4)",
     borderRadius: 20,
     padding: 18,
     height: 56,
     justifyContent: "center",
   },
-  gridInputText: { fontSize: 11, fontWeight: "700", color: "#1A1C19" },
-  statusText: { fontSize: 11, fontWeight: "900", color: "#1A1C19" },
+  gridInputText: { fontSize: 11, fontWeight: "700", color: "#000613" },
+  statusText: { fontSize: 11, fontWeight: "900", color: "#000613" },
   errorText: {
     color: "#EF4444",
     fontSize: 10,
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#1A1C19",
+    backgroundColor: "#000613",
     paddingHorizontal: 28,
     paddingVertical: 16,
     borderRadius: 16,
