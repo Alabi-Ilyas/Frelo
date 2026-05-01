@@ -10,8 +10,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
+  Alert,
 } from "react-native";
 import {
   X,
@@ -29,35 +28,36 @@ export default function CreateInvoiceModal({
   projects = [],
 }) {
   const [selectedProject, setSelectedProject] = useState(null);
-  const [tax, setTax] = useState(0);
+  const [tax, setTax] = useState("0");
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState([
-    { id: Date.now().toString(), description: "", quantity: 1, rate: 0 },
+    { id: Date.now().toString(), description: "", quantity: "1", rate: "0" },
   ]);
 
+  // Reset state when modal closes
   useEffect(() => {
     if (!visible) {
       setSelectedProject(null);
       setLineItems([
-        { id: Date.now().toString(), description: "", quantity: 1, rate: 0 },
+        {
+          id: Date.now().toString(),
+          description: "",
+          quantity: "1",
+          rate: "0",
+        },
       ]);
-      setTax(0);
+      setTax("0");
       setDueDate("");
       setNotes("");
     }
   }, [visible]);
 
-  // Debugging: Check if projects are actually arriving
-  useEffect(() => {
-    if (visible) console.log("Projects available in Modal:", projects.length);
-  }, [visible, projects]);
-
   const subtotal = lineItems.reduce(
-    (acc, i) => acc + Number(i.quantity) * Number(i.rate),
+    (acc, i) => acc + Number(i.quantity || 0) * Number(i.rate || 0),
     0,
   );
-  const total = subtotal + subtotal * (Number(tax) / 100);
+  const total = subtotal + subtotal * (Number(tax || 0) / 100);
 
   const updateLineItem = (id, field, value) =>
     setLineItems(
@@ -65,21 +65,56 @@ export default function CreateInvoiceModal({
     );
 
   const handleSave = () => {
-    if (!selectedProject) return;
-    if (!dueDate.trim()) return alert("Due date is required (YYYY-MM-DD).");
-    const items = lineItems.map(i => ({
-      desc: i.description,
-      qty:  Number(i.quantity),
-      rate: Number(i.rate),
-    }));
-    onSave({
-      projectId: selectedProject._id,
-      clientId:  selectedProject.clientId?._id,
-      items,
-      tax:     Number(tax),
-      dueDate,
-      notes,
-    });
+    // 1. First check if button is firing
+    console.log("Button clicked. Starting validation...");
+
+    if (!selectedProject) {
+      return Alert.alert("Error", "Please select a project.");
+    }
+
+    if (!dueDate || dueDate.length < 8) {
+      return Alert.alert("Error", "Please enter a valid date (YYYY-MM-DD).");
+    }
+
+    try {
+      // 2. Safer Date Padding
+      const paddedDate = dueDate
+        .split("-")
+        .map((part) => part.padStart(2, "0"))
+        .join("-");
+
+      // 3. Calculation
+      const subtotalAmount = lineItems.reduce(
+        (acc, i) => acc + Number(i.quantity || 0) * Number(i.rate || 0),
+        0,
+      );
+      const finalAmount =
+        subtotalAmount + subtotalAmount * (Number(tax || 0) / 100);
+
+      const payload = {
+        clientId: selectedProject.clientId?._id || selectedProject.clientId,
+        projectId: selectedProject._id,
+        items: lineItems.map((i) => ({
+          desc: i.description || "Service",
+          qty: Number(i.quantity) || 1,
+          rate: Number(i.rate) || 0,
+        })),
+        tax: Number(tax) || 0,
+        dueDate: paddedDate, // Explicitly sending this to match backend summarize logic
+        notes: notes.trim(),
+      };
+
+      console.log("PAYLOAD READY:", JSON.stringify(payload, null, 2));
+
+      // 4. Fire the save
+      onSave(payload);
+    } catch (error) {
+      console.error("CRASH IN HANDLE SAVE:", error);
+      Alert.alert(
+        "Logic Error",
+        "Something went wrong while preparing the invoice.",
+      );
+    }
   };
 
   return (
@@ -89,10 +124,10 @@ export default function CreateInvoiceModal({
       transparent
       statusBarTranslucent
     >
-      {/* 1. We wrap the overlay in a View instead of TouchableWithoutFeedback to prevent touch-theft */}
       <View style={styles.overlay}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          // FIX: Changed behavior to avoid the "sinking" effect
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.keyboardView}
         >
           <View style={styles.card}>
@@ -110,81 +145,64 @@ export default function CreateInvoiceModal({
               </TouchableOpacity>
             </View>
 
-            {/* 2. Main ScrollView must have keyboardShouldPersistTaps="handled" */}
             <ScrollView
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
+              style={styles.scrollArea} // Added explicit style
               contentContainerStyle={{ paddingBottom: 40 }}
             >
-              <Text style={styles.sectionTitle}>SELECT PROJECT (STEP 01)</Text>
-
-              {/* 3. Added keyboardShouldPersistTaps to the horizontal scroller too */}
-              <View style={{ minHeight: 60 }}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.projectScroller}
-                  keyboardShouldPersistTaps="always"
-                >
-                  {projects.map((p) => (
-                    <TouchableOpacity
-                      key={p._id}
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        console.log("Selected Project:", p.name);
-                        setSelectedProject(p);
-                      }}
+              <Text style={styles.sectionTitle}>SELECT PROJECT</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyboardShouldPersistTaps="always"
+                style={styles.projectScroller}
+              >
+                {projects.map((p) => (
+                  <TouchableOpacity
+                    key={p._id}
+                    onPress={() => setSelectedProject(p)}
+                    style={[
+                      styles.projectPill,
+                      selectedProject?._id === p._id && styles.activePill,
+                    ]}
+                  >
+                    <Briefcase
+                      size={14}
+                      color={
+                        selectedProject?._id === p._id ? "#FFF" : "#9CA3AF"
+                      }
+                    />
+                    <Text
                       style={[
-                        styles.projectPill,
-                        selectedProject?._id === p._id && styles.activePill,
+                        styles.pillText,
+                        selectedProject?._id === p._id && styles.activePillText,
                       ]}
                     >
-                      <Briefcase
-                        size={14}
-                        color={
-                          selectedProject?._id === p._id ? "#FFF" : "#9CA3AF"
-                        }
-                      />
-                      <Text
-                        style={[
-                          styles.pillText,
-                          selectedProject?._id === p._id &&
-                            styles.activePillText,
-                        ]}
-                      >
-                        {p.name?.toUpperCase()}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                  {projects.length === 0 && (
-                    <Text style={styles.noProjects}>
-                      No active projects found.
+                      {p.name?.toUpperCase()}
                     </Text>
-                  )}
-                </ScrollView>
-              </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
 
               {selectedProject && (
                 <View style={styles.clientBanner}>
                   <User size={12} color="#426900" />
                   <Text style={styles.bannerText}>
-                    LINKED CLIENT:{" "}
+                    LINKED:{" "}
                     <Text style={{ fontWeight: "900" }}>
-                      {selectedProject.clientId?.name || "PRIVATE CLIENT"}
+                      {selectedProject.clientId?.name || "PRIVATE"}
                     </Text>
                   </Text>
                 </View>
               )}
 
-              <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
-                LINE ITEMS (STEP 02)
-              </Text>
+              <Text style={styles.sectionTitle}>LINE ITEMS</Text>
               {lineItems.map((item) => (
                 <View key={item.id} style={styles.itemCard}>
                   <TextInput
                     style={styles.itemInput}
-                    placeholder="Service / Task Description"
-                    placeholderTextColor="#9CA3AF"
+                    placeholder="Description"
                     value={item.description}
                     onChangeText={(v) =>
                       updateLineItem(item.id, "description", v)
@@ -196,26 +214,20 @@ export default function CreateInvoiceModal({
                       <TextInput
                         style={styles.smallInput}
                         keyboardType="numeric"
-                        value={String(item.quantity)}
+                        value={item.quantity}
                         onChangeText={(v) =>
                           updateLineItem(item.id, "quantity", v)
                         }
                       />
                     </View>
-                    <View style={{ flex: 1, marginHorizontal: 10 }}>
+                    <View style={{ flex: 1.5, marginHorizontal: 10 }}>
                       <Text style={styles.metaLabel}>RATE</Text>
                       <TextInput
                         style={styles.smallInput}
                         keyboardType="numeric"
-                        value={String(item.rate)}
+                        value={item.rate}
                         onChangeText={(v) => updateLineItem(item.id, "rate", v)}
                       />
-                    </View>
-                    <View style={{ flex: 1.5, alignItems: "flex-end" }}>
-                      <Text style={styles.metaLabel}>TOTAL</Text>
-                      <Text style={styles.rowTotal}>
-                        ₦{(item.quantity * item.rate).toLocaleString()}
-                      </Text>
                     </View>
                     <TouchableOpacity
                       onPress={() =>
@@ -237,34 +249,31 @@ export default function CreateInvoiceModal({
                     {
                       id: Date.now().toString(),
                       description: "",
-                      quantity: 1,
-                      rate: 0,
+                      quantity: "1",
+                      rate: "0",
                     },
                   ])
                 }
               >
                 <Plus size={16} color="#426900" />
-                <Text style={styles.addBtnText}>ADD NEW ITEM</Text>
+                <Text style={styles.addBtnText}>ADD ITEM</Text>
               </TouchableOpacity>
 
-              <Text style={[styles.sectionTitle, { marginTop: 24 }]}>DUE DATE (STEP 03)</Text>
+              <Text style={styles.sectionTitle}>DUE DATE</Text>
               <TextInput
                 style={styles.dueDateInput}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9CA3AF"
                 value={dueDate}
                 onChangeText={setDueDate}
-                keyboardType="numbers-and-punctuation"
               />
 
-              <Text style={[styles.sectionTitle, { marginTop: 16 }]}>TAX % (OPTIONAL)</Text>
+              <Text style={styles.sectionTitle}>TAX %</Text>
               <TextInput
                 style={styles.dueDateInput}
                 placeholder="0"
-                placeholderTextColor="#9CA3AF"
-                value={String(tax)}
-                onChangeText={v => setTax(Number(v) || 0)}
                 keyboardType="numeric"
+                value={tax}
+                onChangeText={setTax}
               />
             </ScrollView>
 
@@ -276,12 +285,7 @@ export default function CreateInvoiceModal({
                 </View>
                 <Text style={styles.amount}>₦{total.toLocaleString()}</Text>
               </View>
-
-              <TouchableOpacity
-                onPress={handleSave}
-                disabled={!selectedProject}
-                style={[styles.mainBtn, !selectedProject && { opacity: 0.5 }]}
-              >
+              <TouchableOpacity onPress={handleSave} style={styles.mainBtn}>
                 <Sparkles size={18} color="#FFF" />
                 <Text style={styles.mainBtnText}>GENERATE INVOICE</Text>
               </TouchableOpacity>
@@ -296,16 +300,22 @@ export default function CreateInvoiceModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(26,28,25,0.8)",
+    backgroundColor: "rgba(0,0,0,0.6)", // Darker overlay for focus
     justifyContent: "flex-end",
   },
-  keyboardView: { width: "100%", height: "94%" },
+  keyboardView: {
+    width: "100%",
+    justifyContent: "flex-end",
+  },
   card: {
-    flex: 1,
     backgroundColor: "#f8f9fa",
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     padding: 24,
+    height: "92%", // Fixed height prevents the "sinking" feel
+  },
+  scrollArea: {
+    flex: 1, // Allow ScrollView to take available space
   },
   dragHandle: {
     width: 40,
@@ -313,26 +323,26 @@ const styles = StyleSheet.create({
     backgroundColor: "#E5E7EB",
     alignSelf: "center",
     borderRadius: 2,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  headerTitle: { fontSize: 22, fontWeight: "900", color: "#000613" },
+  headerTitle: { fontSize: 20, fontWeight: "900", color: "#000613" },
   headerSubtitle: {
     fontSize: 9,
     fontWeight: "900",
     color: "#9CA3AF",
-    letterSpacing: 1.5,
+    letterSpacing: 1,
   },
   closeCircle: {
-    width: 40,
-    height: 40,
-    backgroundColor: "rgba(196,198,207,0.4)",
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -340,62 +350,43 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "900",
     color: "#9CA3AF",
-    letterSpacing: 1,
-    marginBottom: 12,
+    marginTop: 20,
+    marginBottom: 10,
   },
-  projectScroller: { paddingBottom: 10 },
+  projectScroller: { flexDirection: "row" },
   projectPill: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    padding: 12,
     borderRadius: 12,
     backgroundColor: "#FFF",
+    marginRight: 8,
     borderWidth: 1,
-    borderColor: "rgba(196,198,207,0.4)",
-    marginRight: 10,
-    gap: 8,
+    borderColor: "#E5E7EB",
   },
   activePill: { backgroundColor: "#000613", borderColor: "#000613" },
   pillText: { fontSize: 12, fontWeight: "800", color: "#000613" },
   activePillText: { color: "#FFF" },
-  noProjects: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    fontStyle: "italic",
-    paddingVertical: 10,
-  },
   clientBanner: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F0FDF4",
-    padding: 12,
-    borderRadius: 12,
-    gap: 8,
-    marginBottom: 10,
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 10,
   },
-  bannerText: { fontSize: 10, color: "#426900", fontWeight: "700" },
+  bannerText: { fontSize: 11, color: "#426900" },
   itemCard: {
     backgroundColor: "#FFF",
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: "rgba(196,198,207,0.4)",
+    borderColor: "#E5E7EB",
   },
-  itemInput: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#000613",
-    marginBottom: 12,
-  },
+  itemInput: { fontSize: 14, fontWeight: "700", marginBottom: 10 },
   itemMetaRow: { flexDirection: "row", alignItems: "center" },
-  metaLabel: {
-    fontSize: 8,
-    fontWeight: "900",
-    color: "#9CA3AF",
-    marginBottom: 4,
-  },
+  metaLabel: { fontSize: 8, fontWeight: "900", color: "#9CA3AF" },
   smallInput: {
     backgroundColor: "#f8f9fa",
     borderRadius: 8,
@@ -403,53 +394,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
     borderWidth: 1,
-    borderColor: "rgba(196,198,207,0.4)",
-    color: "#000613",
+    borderColor: "#E5E7EB",
   },
-  rowTotal: { fontSize: 14, fontWeight: "900", color: "#000613" },
-  trash: { marginLeft: 15, padding: 5 },
-  addBtn: { flexDirection: "row", alignItems: "center", gap: 6, padding: 10 },
-  addBtnText: { fontSize: 10, fontWeight: "900", color: "#426900" },
+  trash: { marginLeft: 10 },
+  addBtn: { flexDirection: "row", alignItems: "center", padding: 10 },
+  addBtnText: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#426900",
+    marginLeft: 5,
+  },
   dueDateInput: {
     backgroundColor: "#FFF",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderRadius: 12,
+    padding: 14,
     fontSize: 14,
-    fontWeight: "700",
-    color: "#000613",
     borderWidth: 1,
-    borderColor: "rgba(196,198,207,0.4)",
-    marginBottom: 4,
+    borderColor: "#E5E7EB",
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: "rgba(196,198,207,0.4)",
-    paddingTop: 20,
-    paddingBottom: Platform.OS === "ios" ? 30 : 10,
+    borderTopColor: "#E5E7EB",
+    paddingTop: 15,
+    paddingBottom: Platform.OS === "ios" ? 40 : 20,
   },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 15,
   },
   totalLabel: { fontSize: 10, fontWeight: "900", color: "#9CA3AF" },
-  taxNote: { fontSize: 11, fontWeight: "700", color: "#000613" },
-  amount: { fontSize: 32, fontWeight: "900", color: "#000613" },
+  amount: { fontSize: 28, fontWeight: "900" },
   mainBtn: {
     backgroundColor: "#000613",
-    height: 60,
-    borderRadius: 22,
+    height: 56,
+    borderRadius: 16,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
   },
-  mainBtnText: {
-    color: "#FFF",
-    fontWeight: "900",
-    fontSize: 13,
-    letterSpacing: 0.5,
-  },
+  mainBtnText: { color: "#FFF", fontWeight: "900" },
 });
