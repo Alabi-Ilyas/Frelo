@@ -13,6 +13,7 @@ import {
 import {
   getNotifications, markNotifRead, markAllNotifsRead, deleteNotification,
 } from "../api/apiCalls";
+import { useAuth } from "../components/context/AuthContext";
 import ScreenHeader from "./ScreenHeader";
 
 const FILTERS = ["all", "unread", "invoice", "project", "appointment"];
@@ -39,6 +40,8 @@ function timeAgo(dateStr) {
 
 export default function NotificationScreen() {
   const navigation = useNavigation();
+  const { user } = useAuth();
+  const isClient = user?.role === "client";
 
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter]       = useState("all");
@@ -113,16 +116,36 @@ export default function NotificationScreen() {
     catch { fetch(filter, 1, false); }
   };
 
-  // Navigate to the related screen — matches web href logic
+  // Navigate to related screen — matches web href logic exactly
+  // Freelancer: Invoice→invoices/:id, Project→projects/:id
+  // Client:     Invoice→Invoices list, Project→projects/:id, Appointment→Booking
   const handleViewDetails = (n) => {
     if (!n.read) handleMarkOne(n._id);
-    const isFreelancer = true; // both roles use same notification screen
-    if (n.refModel === "Invoice") {
-      navigation.navigate("Invoices");
-    } else if (n.refModel === "Project") {
-      navigation.navigate("Projects");
-    } else if (n.refModel === "Appointment") {
-      navigation.navigate("Calendar");
+
+    if (isClient) {
+      // Client navigation — matches web client notification page
+      if (n.refModel === "Invoice") {
+        navigation.navigate("Invoices");
+      } else if (n.refModel === "Project" && n.refId) {
+        navigation.navigate("Projects", {
+          screen: "ProjectDetail",
+          params: { projectId: n.refId },
+        });
+      } else if (n.refModel === "Appointment") {
+        navigation.navigate("Booking");
+      }
+    } else {
+      // Freelancer navigation — matches web freelancer notification page
+      if (n.refModel === "Invoice" && n.refId) {
+        navigation.navigate("Invoices");
+      } else if (n.refModel === "Project" && n.refId) {
+        navigation.navigate("Projects", {
+          screen: "ProjectDetail",
+          params: { projectId: n.refId },
+        });
+      } else if (n.refModel === "Appointment") {
+        navigation.navigate("Calendar");
+      }
     }
   };
 
