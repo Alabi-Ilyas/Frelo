@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://172.20.10.3:5001/api",
+  baseURL: "https://final-year-project-backend-zef7.onrender.com/api",
   timeout: 10000,
 });
 
